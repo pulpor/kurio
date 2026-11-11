@@ -76,7 +76,7 @@ export function CatalogSection({ queryParams, onUpdateParams, onResetParams, onS
         {/* Sidebar */}
         <aside className="hidden w-[310px] shrink-0 md:block">
           <div className="h-[786px] bg-card px-5 pt-[17px]">
-            <h3 className={sidebarTitle}>Coleções</h3>
+            <h2 className={sidebarTitle}>Coleções</h2>
             <ul className="mt-2 pl-3">
               {COLLECTIONS.map((c) => {
                 const selected = queryParams.category === c.value;
@@ -96,7 +96,7 @@ export function CatalogSection({ queryParams, onUpdateParams, onResetParams, onS
               })}
             </ul>
 
-            <h3 className={`${sidebarTitle} mt-[35px]`}>Faixa de preço</h3>
+            <h2 className={`${sidebarTitle} mt-[35px]`}>Faixa de preço</h2>
             <div className="relative ml-3 mt-[10px] h-4 w-[258px]">
               <div className="absolute inset-x-2 top-[6px] h-1 rounded bg-ink" />
               <div
@@ -137,7 +137,7 @@ export function CatalogSection({ queryParams, onUpdateParams, onResetParams, onS
               Aplicar
             </button>
 
-            <h3 className={`${sidebarTitle} mt-[36px]`}>Rede</h3>
+            <h2 className={`${sidebarTitle} mt-[36px]`}>Rede</h2>
             <ul className="mt-2 pl-3">
               {NETWORKS.map((n) => (
                 <li key={n.label} className="flex h-10 items-center justify-between pr-3 text-[15px] text-sand">
@@ -149,7 +149,7 @@ export function CatalogSection({ queryParams, onUpdateParams, onResetParams, onS
           </div>
 
           <div className="mt-[23px] h-[470px] bg-[#261910] pt-[36px]">
-            <h3 className="pl-5 text-[24px] font-bold leading-8 text-brand-hi">NFT EM DESTAQUE</h3>
+            <h2 className="pl-5 text-[24px] font-bold leading-8 text-brand-hi">NFT EM DESTAQUE</h2>
             <p className="mt-[6px] text-center text-[22px] font-bold leading-8">OFERTA LIMITADA</p>
             <button onClick={() => onSelectNft('sage-nomad-009')} className="relative mt-[14px] block">
               <img src={IMG_CHAPEU} alt="Sage Nomad #009" className="h-[366px] w-[310px] rounded-3xl object-cover" />
@@ -160,8 +160,8 @@ export function CatalogSection({ queryParams, onUpdateParams, onResetParams, onS
 
         {/* Main column */}
         <main className="min-w-0 flex-1">
-          <div className="flex items-start justify-between md:h-10">
-            <div className="flex gap-[21px] overflow-x-auto text-[15px] leading-6 md:overflow-visible">
+          <div className="flex flex-wrap items-start justify-between gap-4 md:min-h-10">
+            <div className="flex min-w-0 gap-[21px] overflow-x-auto text-[15px] leading-6 md:overflow-visible">
               {tabs.map((t) => {
                 const active = activeTab === t.id;
                 return (
@@ -265,11 +265,11 @@ export function CatalogSection({ queryParams, onUpdateParams, onResetParams, onS
           <div key={b.id} className="relative flex h-[250px] overflow-hidden rounded-lg bg-card">
             <img src={b.img} alt={b.title.join(' ')} className="h-[250px] w-[287px] shrink-0 rounded-2xl object-cover" />
             <div className="flex-1 pl-2 pr-[30px] pt-[44px] text-right">
-              <h3 className="text-[18px] font-bold leading-6">
+              <h2 className="text-[18px] font-bold leading-6">
                 {b.title[0]}
                 <br />
                 {b.title[1]}
-              </h3>
+              </h2>
               <p className="mt-[16px] text-[14px] leading-6 text-sand">{b.text}</p>
             </div>
             <button

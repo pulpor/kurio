@@ -53,7 +53,7 @@ export function NFTDetailPage({ nftId, onBack, onGoToCheckout, onSelectNft, onTo
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-[1200px] space-y-6 px-6 py-10 md:px-4 xl:px-0">
+      <div className="mx-auto min-h-[1100px] max-w-[1200px] space-y-6 px-6 py-10 md:px-4 xl:px-0">
         <Skeleton className="h-4 w-40" />
         <div className="grid gap-8 md:grid-cols-2">
           <Skeleton className="aspect-square w-full" />
@@ -154,6 +154,7 @@ export function NFTDetailPage({ nftId, onBack, onGoToCheckout, onSelectNft, onTo
                 <button
                   key={i}
                   onClick={() => setThumb(i)}
+                  aria-label={`Ver imagem ${i + 1}`}
                   className={`h-[100px] w-[100px] overflow-hidden rounded-lg ${thumb === i ? 'border border-brand' : ''}`}
                 >
                   <img src={src} alt="" className="h-full w-full object-cover" />

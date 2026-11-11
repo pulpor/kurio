@@ -27,6 +27,17 @@ test('unknown routes render the 404 page', async ({ page }) => {
   await expect(page.getByRole('heading', { name: '404' })).toBeVisible();
 });
 
+test('catalog and NFT detail fit common viewport widths', async ({ page }) => {
+  for (const width of [320, 390, 768, 1040, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const route of ['/', '/nft/emerald-ape-042']) {
+      await page.goto(route);
+      await expect(page.getByText(/Emerald Ape/i).filter({ visible: true }).first()).toBeVisible();
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+    }
+  }
+});
+
 test('private routes redirect to login and return after authentication', async ({ page }) => {
   await page.goto('/profile');
   await expect(page).toHaveURL(/\/login\?redirect=/);

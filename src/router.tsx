@@ -166,6 +166,7 @@ function HomePage() {
 
   return (
     <>
+      {!featured && <div className="hidden h-[579px] md:block" />}
       {featured && (
         <HeroSection
           featuredNft={featured}

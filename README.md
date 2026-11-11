@@ -1,40 +1,29 @@
-# Kurio — NFT Marketplace
+# Kurio — marketplace de NFTs
 
-Frontend challenge implementation in React + TypeScript. Backend, auth, wallets and payments are simulated with MSW.
+Aplicação frontend em React e TypeScript. Backend, autenticação, carteiras e pagamentos são simulados com MSW.
 
-**Stack:** React 19, TanStack Router, TanStack Query, Axios, Socket.IO client, Tailwind CSS v4, MSW (+ `@mswjs/socket.io-binding`), Playwright, Lighthouse CI.
+**Tecnologias:** TanStack Router e Query, Axios, Socket.IO, Tailwind CSS, Playwright e Lighthouse CI.
 
-## Setup
+## Executar
 
 ```bash
 npm install --legacy-peer-deps
-npm run dev          # dev server with mocks, http://localhost:3000
-npm run build        # production build (mocks are bundled for the demo)
-npm run preview      # serve the build on :3000
-npm run typecheck    # tsc --noEmit (also used as lint)
-npm run test:e2e     # Playwright (builds and serves the app itself)
-npm run audit:lighthouse   # needs `npm run build && npm run preview` running
+npm run dev                 # desenvolvimento em http://localhost:3000
+npm run build               # build de produção com os dados simulados
+npm run preview             # serve o build na porta 3000
+npm run typecheck           # verifica os tipos
+npm run test:e2e            # testes Playwright em desktop e celular
+npm run audit:lighthouse    # requer build e preview em execução
 ```
 
-Playwright uses the installed Google Chrome (`channel: 'chrome'`); run `npx playwright install chrome` if missing. No environment variables are required.
+Os testes usam o Google Chrome instalado; se necessário, execute `npx playwright install chrome`. Não são necessárias variáveis de ambiente.
 
-## Fictitious credentials
+## Credenciais fictícias
 
-| User | E-mail | Password |
-| --- | --- | --- |
-| 1 | `contato@email.com` | any string with 6+ characters |
-| 2 | `alex.collector@crypto.art` | any string with 6+ characters |
+E-mails: `contato@email.com` ou `alex.collector@crypto.art`. Use qualquer senha com pelo menos seis caracteres. Cupom: `KURIO10`.
 
-Coupon: `KURIO10`.
+O console de simulação, no ícone de engrenagem da barra de navegação, permite testar latência, erros, modo offline, eventos, reconexão e troca de usuário. Os dados ficam no `localStorage` e podem ser restaurados pelo próprio console.
 
-## Scenarios and reset
+## Documentação e deploy
 
-Open the simulation console (gear icon in the navbar). It controls latency, forced HTTP errors, offline mode, the `nft.updated` price change, a stale event, the socket drop/reconnect, user switching and a full database reset. State is persisted in `localStorage`; reset restores the seed fixtures.
-
-## Docs
-
-Architecture, contracts, cache policy, realtime reconciliation and known limitations: [ARCHITECTURE.md](ARCHITECTURE.md).
-
-## Deploy
-
-`vercel.json` rewrites every route to `index.html` so direct access and refresh work.
+Consulte [ARCHITECTURE.md](ARCHITECTURE.md). No Vercel, `vercel.json` direciona as rotas para `index.html`, permitindo acesso direto e atualização da página.

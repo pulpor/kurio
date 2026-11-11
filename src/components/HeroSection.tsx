@@ -39,6 +39,7 @@ export function HeroSection({ featuredNft, onSelectNft, onNavigateToCatalog, onS
         <img
           src={featuredNft.image}
           alt={featuredNft.title}
+          fetchPriority="high"
           onClick={() => onSelectNft(featuredNft.id)}
           className="absolute right-0 top-[33px] h-[450px] w-[450px] cursor-pointer rounded-[32px] object-cover"
         />
@@ -98,6 +99,7 @@ export function HeroSection({ featuredNft, onSelectNft, onNavigateToCatalog, onS
           <img
             src={featuredNft.image}
             alt={featuredNft.title}
+            fetchPriority="high"
             onClick={() => onSelectNft(featuredNft.id)}
             className="absolute right-4 top-[10px] h-[138px] w-[138px] rounded-2xl object-cover"
           />
