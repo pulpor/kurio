@@ -1,32 +1,28 @@
 {
-  "name": "react-example",
+  "name": "kurio-nft-marketplace",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
+    "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "test:visual": "playwright test --update-snapshots",
-    "audit:lighthouse": "node -e 'console.log(require(\"./lighthouse/audit-summary.json\"))'"
+    "test:visual": "playwright test visual --update-snapshots",
+    "audit:lighthouse": "lhci autorun --config=lighthouse/lighthouserc.json"
   },
   "dependencies": {
-    "@google/genai": "^2.4.0",
+    "@mswjs/socket.io-binding": "^0.2.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.107.1",
     "@tanstack/react-router": "^1.170.46",
     "@vitejs/plugin-react": "^6.1.1",
     "axios": "^1.21.1",
     "clsx": "^2.1.1",
-    "dotenv": "^17.2.3",
-    "express": "^4.21.2",
     "lucide-react": "^0.546.0",
-    "motion": "^12.23.24",
-    "msw": "^3.0.4",
+    "msw": "^2.15.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "socket.io-client": "^4.8.4",
@@ -34,14 +30,12 @@
     "vite": "^8.3.0"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.65.0",
     "@types/node": "^22.14.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "autoprefixer": "^10.4.21",
-    "esbuild": "^0.25.0",
     "tailwindcss": "^4.3.3",
-    "tsx": "^4.21.0",
-    "typescript": "^7.0.2",
-    "@types/express": "^4.17.21"
+    "typescript": "^7.0.2"
   }
 }

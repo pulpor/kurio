@@ -1,91 +1,118 @@
-import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowRight, Search, SlidersHorizontal } from 'lucide-react';
 import { NFT } from '../types';
+import { IMG_CHAPEU } from '../assets/images';
 
 interface HeroSectionProps {
   featuredNft: NFT;
   onSelectNft: (id: string) => void;
   onNavigateToCatalog: () => void;
+  onSearch?: (q: string) => void;
 }
 
-export function HeroSection({
-  featuredNft,
-  onSelectNft,
-  onNavigateToCatalog,
-}: HeroSectionProps) {
+export function HeroSection({ featuredNft, onSelectNft, onNavigateToCatalog, onSearch }: HeroSectionProps) {
+  const [q, setQ] = useState('');
+
   return (
-    <section className="relative overflow-hidden pt-8 pb-14 lg:py-20 bg-[#130C0A]">
-      {/* Subtle ambient warm glow */}
-      <div
-        aria-hidden="true"
-        className="absolute top-1/3 right-1/4 w-[500px] h-[350px] bg-[#D1894B]/5 blur-[120px] rounded-full pointer-events-none"
-      />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-          
-          {/* Left Column: Editorial Headline & Exploration */}
-          <div className="lg:col-span-7 space-y-6 text-left">
-            <span className="text-xs font-mono font-bold tracking-[0.2em] text-[#D1894B] uppercase block">
-              Bem-vindo à Kurio
-            </span>
-
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#FDF2DA] font-mono uppercase leading-[1.05]">
-              SEJA DONO DO FUTURO<br />
-              <span className="text-[#D1894B]">DA ARTE DIGITAL</span>
-            </h1>
-
-            <p className="text-sm sm:text-base text-[#A8907E] max-w-xl font-normal leading-relaxed">
-              Descubra NFTs selecionados de criadores emergentes e consagrados. Colecione arte digital rara, apoie artistas e tenha uma parte da cultura da internet.
-            </p>
-
-            <div className="pt-2">
-              <button
-                onClick={onNavigateToCatalog}
-                className="px-7 py-3 text-xs sm:text-sm font-bold uppercase tracking-wider text-[#130C0A] bg-[#D1894B] hover:bg-[#E0985C] rounded-md transition-colors inline-flex items-center gap-2 shadow-lg shadow-[#D1894B]/20 font-mono"
-              >
-                EXPLORAR
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Right Column: Featured Ape Image Card from Figma */}
-          <div className="lg:col-span-5 flex flex-col items-center">
-            <div
-              onClick={() => onSelectNft(featuredNft.id)}
-              className="group relative w-full max-w-sm sm:max-w-md aspect-[4/5] rounded-3xl overflow-hidden bg-[#231611] border border-[#38210F] shadow-2xl cursor-pointer hover:border-[#D1894B] transition-all duration-300"
-            >
-              <img
-                src={featuredNft.image}
-                alt={featuredNft.title}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
-              />
-
-              {/* Bottom tag preview */}
-              <div className="absolute bottom-4 left-4 right-4 p-3 rounded-xl bg-[#130C0A]/90 backdrop-blur-md border border-[#38210F] flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-mono text-[#D1894B] block">Destaque da Coleção</span>
-                  <h3 className="text-sm font-bold text-[#FDF2DA]">{featuredNft.title}</h3>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-[#A8907E] block">Preço</span>
-                  <span className="font-mono font-bold text-sm text-[#D1894B]">{featuredNft.priceEth} ETH</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Pagination Dots matching Figma Page 1 & 10 */}
-            <div className="flex items-center gap-2 pt-4" aria-hidden="true">
-              <span className="w-6 h-1.5 rounded-full bg-[#D1894B]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-[#38210F]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-[#38210F]" />
-            </div>
-          </div>
-
+    <>
+      {/* Desktop (Figma page 1) */}
+      <section className="relative mx-auto hidden h-[579px] max-w-[1200px] md:block">
+        <div className="absolute left-10 top-[75px] text-[14px] font-bold leading-[18px] tracking-[0.1em]">
+          Bem-vindo à Kurio
         </div>
-      </div>
-    </section>
+        <h1 className="absolute left-10 top-[102px] text-[43px] font-bold leading-[70px]">
+          SEJA DONO DO FUTURO
+          <br />
+          DA ARTE DIGITAL
+        </h1>
+        <p className="absolute left-10 top-[244px] w-[560px] text-[14px] leading-[24px] text-sand">
+          Descubra NFTs selecionados de criadores emergentes e consagrados. Colecione arte digital rara, apoie
+          artistas e tenha uma parte da cultura da internet.
+        </p>
+        <button
+          onClick={onNavigateToCatalog}
+          className="absolute left-10 top-[348px] h-10 w-[140px] rounded-md bg-brand text-[16px] font-bold text-ink"
+        >
+          EXPLORAR
+        </button>
+
+        <img
+          src={featuredNft.image}
+          alt={featuredNft.title}
+          onClick={() => onSelectNft(featuredNft.id)}
+          className="absolute right-0 top-[33px] h-[450px] w-[450px] cursor-pointer rounded-[32px] object-cover"
+        />
+
+        <div className="absolute left-[600px] top-[433px] flex items-center gap-[14px]" aria-hidden="true">
+          <span className="h-[6px] w-[6px] rounded-full bg-brand" />
+          <span className="h-[6px] w-[6px] rounded-full bg-brand" />
+          <span className="h-[6px] w-[6px] rounded-full bg-brand" />
+        </div>
+      </section>
+
+      {/* Mobile (Figma page 10) */}
+      <section className="px-6 pb-2 pt-10 md:hidden">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSearch?.(q.trim());
+          }}
+          className="flex items-center gap-2"
+        >
+          <label className="flex h-[45px] flex-1 items-center gap-3 rounded-xl bg-card px-4">
+            <Search className="h-5 w-5 shrink-0 text-brand" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Explorar coleções"
+              aria-label="Buscar no catálogo"
+              className="w-full min-w-0 bg-transparent text-[14px] font-bold text-sand outline-none placeholder:font-bold"
+            />
+          </label>
+          <button
+            type="button"
+            aria-label="Filtros"
+            onClick={onNavigateToCatalog}
+            className="bg-brand-grad flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-ink"
+          >
+            <SlidersHorizontal className="h-5 w-5" />
+          </button>
+        </form>
+
+        <div className="relative mt-4 h-[190px] overflow-hidden rounded-3xl bg-gradient-to-br from-[#3a2316] to-[#241612]">
+          <div className="absolute -right-10 -top-10 h-[200px] w-[200px] rounded-full bg-brand/10" />
+          <div className="absolute left-4 top-[14px] w-[150px]">
+            <div className="text-[12px] font-bold leading-4">Bem-vindo à Kurio</div>
+            <h1 className="mt-[6px] text-[18px] font-bold leading-6">
+              SEJA DONO DA
+              <br />
+              CULTURA DIGITAL
+            </h1>
+            <p className="mt-[6px] text-[12px] leading-[17px] text-sand">
+              Descubra NFTs selecionados de criadores do mundo todo.
+            </p>
+            <button onClick={onNavigateToCatalog} className="mt-[10px] flex items-center gap-1 text-[12px] font-bold text-brand">
+              EXPLORAR <ArrowRight className="h-3 w-3" />
+            </button>
+          </div>
+          <img
+            src={featuredNft.image}
+            alt={featuredNft.title}
+            onClick={() => onSelectNft(featuredNft.id)}
+            className="absolute right-4 top-[10px] h-[138px] w-[138px] rounded-2xl object-cover"
+          />
+          <img
+            src={IMG_CHAPEU}
+            alt=""
+            className="absolute right-[94px] top-[99px] h-[58px] w-[70px] rounded-xl border-[3px] border-card object-cover"
+          />
+          <div className="absolute bottom-[10px] left-1/2 flex -translate-x-1/2 gap-[6px]" aria-hidden="true">
+            <span className="h-2 w-2 rounded-full bg-brand" />
+            <span className="h-2 w-2 rounded-full bg-brand/40" />
+            <span className="h-2 w-2 rounded-full bg-brand/40" />
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

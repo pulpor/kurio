@@ -1,78 +1,58 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { socket } from '../lib/socket';
+import { socket, isFreshEvent, clearSeenEvents } from '../lib/socket';
+import { useAuth } from './useAuth';
 import { NFTUpdatedEvent, OrderUpdatedEvent } from '../types';
 
 export interface PriceAlert {
   nftId: string;
   message: string;
-  timestamp: number;
 }
 
 export function useRealtimeSync() {
   const queryClient = useQueryClient();
-  const [isConnected, setIsConnected] = useState<boolean>(socket.connected);
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
   const [recentAlert, setRecentAlert] = useState<PriceAlert | null>(null);
 
   useEffect(() => {
-    const handleConnect = () => {
-      setIsConnected(true);
-      // Reconcile all active queries with REST upon reconnect
+    clearSeenEvents();
+    const subscribe = () => socket.emit('subscribe', userId);
+    const reconcile = () => {
+      subscribe();
       queryClient.invalidateQueries();
     };
 
-    const handleDisconnect = () => {
-      setIsConnected(false);
-    };
-
-    const handleNftUpdated = (event: NFTUpdatedEvent) => {
-      // 1. Invalidate NFT detail and catalog lists
-      queryClient.invalidateQueries({ queryKey: ['nft', event.nftId] });
+    const onNft = (e: NFTUpdatedEvent) => {
+      if (!isFreshEvent(`nft:${e.nftId}`, e.version)) return;
+      queryClient.invalidateQueries({ queryKey: ['nft', e.nftId] });
       queryClient.invalidateQueries({ queryKey: ['nfts'] });
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       queryClient.invalidateQueries({ queryKey: ['cart-quote'] });
-
-      // Set user visible alert if this affects user's context
       setRecentAlert({
-        nftId: event.nftId,
-        message: `Cotação atualizada em tempo real: ${event.priceEth} ETH (${event.availableCount} restantes)`,
-        timestamp: Date.now(),
+        nftId: e.nftId,
+        message: `Cotação atualizada: ${e.priceEth} ETH (${e.availableCount} restantes)`,
       });
     };
 
-    const handleOrderUpdated = (event: OrderUpdatedEvent) => {
-      queryClient.invalidateQueries({ queryKey: ['order', event.orderId] });
+    const onOrder = (e: OrderUpdatedEvent) => {
+      if (!isFreshEvent(`order:${e.orderId}`, e.version)) return;
+      queryClient.invalidateQueries({ queryKey: ['order', e.orderId] });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     };
 
-    socket.on('connect', handleConnect);
-    socket.on('reconnect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
-    socket.on('nft.updated', handleNftUpdated);
-    socket.on('order.updated', handleOrderUpdated);
+    socket.on('connect', reconcile);
+    socket.on('nft.updated', onNft);
+    socket.on('order.updated', onOrder);
+    if (socket.connected) subscribe();
+    else socket.connect();
 
     return () => {
-      socket.off('connect', handleConnect);
-      socket.off('reconnect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
-      socket.off('nft.updated', handleNftUpdated);
-      socket.off('order.updated', handleOrderUpdated);
+      socket.off('connect', reconcile);
+      socket.off('nft.updated', onNft);
+      socket.off('order.updated', onOrder);
     };
-  }, [queryClient]);
+  }, [queryClient, userId]);
 
-  const dismissAlert = () => setRecentAlert(null);
-
-  const simulateReconnect = () => {
-    socket.disconnect();
-    setTimeout(() => {
-      socket.connect();
-    }, 400);
-  };
-
-  return {
-    isConnected,
-    recentAlert,
-    dismissAlert,
-    simulateReconnect,
-  };
+  return { recentAlert, dismissAlert: () => setRecentAlert(null) };
 }

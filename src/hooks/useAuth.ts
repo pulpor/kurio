@@ -22,7 +22,7 @@ export function useAuth() {
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const { data } = await api.post('/api/auth/login', { email, password });
       if (data.token) {
-        localStorage.setItem('aetheria_auth_token', data.token);
+        localStorage.setItem('kurio_auth_token', data.token);
       }
       return data.user as User;
     },
@@ -39,7 +39,7 @@ export function useAuth() {
     mutationFn: async (payload: { name: string; username: string; email: string; password: string }) => {
       const { data } = await api.post('/api/auth/register', payload);
       if (data.token) {
-        localStorage.setItem('aetheria_auth_token', data.token);
+        localStorage.setItem('kurio_auth_token', data.token);
       }
       return data.user as User;
     },
@@ -53,7 +53,7 @@ export function useAuth() {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       await api.post('/api/auth/logout');
-      localStorage.removeItem('aetheria_auth_token');
+      localStorage.removeItem('kurio_auth_token');
     },
     onSuccess: () => {
       queryClient.setQueryData(['session'], null);

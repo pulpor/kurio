@@ -1,20 +1,10 @@
 import React, { useState } from 'react';
-import {
-  Search,
-  Filter,
-  ArrowRight,
-  Shield,
-  Users,
-  Bell,
-  Sparkles,
-  Layers,
-  ChevronRight,
-  Check,
-} from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronRight } from 'lucide-react';
 import { NFTCard } from './NFTCard';
 import { NFTSkeletonCard } from './ui/Skeleton';
 import { useNFTs, NFTQueryParams } from '../hooks/useNFTs';
 import { Category, SortOption, CatalogTab } from '../types';
+import { IMG_OCULOS, IMG_CHAPEU, IMG_TERNO, IMG_FONE } from '../assets/images';
 
 interface CatalogSectionProps {
   queryParams: NFTQueryParams;
@@ -24,601 +14,299 @@ interface CatalogSectionProps {
   onToast: (toast: { type: 'success' | 'error' | 'info'; title: string; description?: string }) => void;
 }
 
-export function CatalogSection({
-  queryParams,
-  onUpdateParams,
-  onResetParams,
-  onSelectNft,
-  onToast,
-}: CatalogSectionProps) {
+const COLLECTIONS: { label: string; value: Category; count: number }[] = [
+  { label: 'Arte digital', value: 'arte-digital', count: 33 },
+  { label: 'Fotografia', value: 'fotografia', count: 12 },
+  { label: 'Música', value: 'musica', count: 65 },
+  { label: 'Arte 3D', value: 'arte-3d', count: 39 },
+  { label: 'Colecionáveis', value: 'colecionaveis', count: 23 },
+  { label: 'Generativa', value: 'generativa', count: 17 },
+  { label: 'Jogos', value: 'jogos', count: 19 },
+  { label: 'Assinaturas', value: 'assinaturas', count: 13 },
+  { label: 'Utilidade', value: 'utilidade', count: 18 },
+];
+
+const NETWORKS = [
+  { label: 'Ethereum', count: 119 },
+  { label: 'Polygon', count: 78 },
+  { label: 'Solana', count: 86 },
+];
+
+const ARTICLES = [
+  { img: IMG_OCULOS, meta: '12 de setembro | Leitura de 6 min', title: 'Como funciona a propriedade de NFTs', text: 'Aprenda a colecionar, negociar e verificar ativos digitais.' },
+  { img: IMG_CHAPEU, meta: '13 de setembro | Leitura de 2 min', title: '10 artistas digitais para acompanhar', text: 'Conheça criadores que moldam a cultura digital.' },
+  { img: IMG_TERNO, meta: '15 de setembro | Leitura de 3 min', title: 'Raridade, atributos e procedência', text: 'Entenda raridade, procedência, direitos autorais e utilidade.' },
+  { img: IMG_FONE, meta: '15 de setembro | Leitura de 2 min', title: 'Como proteger sua carteira', text: 'Proteja sua carteira, seus ativos e sua identidade.' },
+];
+
+const SLIDER_MAX = 16;
+
+export function CatalogSection({ queryParams, onUpdateParams, onResetParams, onSelectNft, onToast }: CatalogSectionProps) {
   const { data, isLoading, isError, error, refetch } = useNFTs(queryParams);
   const nftItems = Array.isArray(data?.items) ? data.items : [];
 
   const [activeTab, setActiveTab] = useState<CatalogTab>('todos');
-  const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [newsletterSent, setNewsletterSent] = useState(false);
+  const [minPrice, setMinPrice] = useState(queryParams.minPrice || '0.02');
+  const [maxPrice, setMaxPrice] = useState(queryParams.maxPrice || '12.30');
 
-  // Price range slider local state
-  const [minPriceInput, setMinPriceInput] = useState(queryParams.minPrice || '0.02');
-  const [maxPriceInput, setMaxPriceInput] = useState(queryParams.maxPrice || '12.30');
+  const fmt = (v: string) => Number(v).toFixed(2).replace('.', ',');
+  const page = queryParams.page || 1;
 
-  // Sidebar collections exactly matching Figma Page 1
-  const collectionsList: { label: string; value: Category; count: number }[] = [
-    { label: 'Arte digital', value: 'arte-digital', count: 33 },
-    { label: 'Fotografia', value: 'fotografia', count: 12 },
-    { label: 'Música', value: 'musica', count: 65 },
-    { label: 'Arte 3D', value: 'arte-3d', count: 39 },
-    { label: 'Colecionáveis', value: 'colecionaveis', count: 23 },
-    { label: 'Generativa', value: 'generativa', count: 17 },
-    { label: 'Jogos', value: 'jogos', count: 19 },
-    { label: 'Assinaturas', value: 'assinaturas', count: 13 },
-    { label: 'Utilidade', value: 'utilidade', count: 18 },
-  ];
-
-  // Networks matching Figma Page 1
-  const networksList = [
-    { label: 'Ethereum', count: 119 },
-    { label: 'Polygon', count: 78 },
-    { label: 'Solana', count: 86 },
-  ];
-
-  const handleApplyPrice = () => {
-    onUpdateParams({
-      minPrice: minPriceInput || undefined,
-      maxPrice: maxPriceInput || undefined,
-      page: 1,
-    });
-    onToast({
-      type: 'info',
-      title: 'Filtro Aplicado',
-      description: `Filtrando obras entre ${minPriceInput} e ${maxPriceInput} ETH`,
-    });
+  const applyPrice = () => {
+    onUpdateParams({ minPrice: minPrice || undefined, maxPrice: maxPrice || undefined, page: 1 });
+    onToast({ type: 'info', title: 'Filtro aplicado', description: `Filtrando obras entre ${minPrice} e ${maxPrice} ETH` });
   };
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newsletterEmail) return;
-    setNewsletterSent(true);
-    onToast({
-      type: 'success',
-      title: 'Inscrição Confirmada!',
-      description: 'Você receberá os alertas dos próximos lançamentos.',
-    });
-    setNewsletterEmail('');
-    setTimeout(() => setNewsletterSent(false), 3000);
+  const pickTab = (tab: CatalogTab) => {
+    setActiveTab(tab);
+    onUpdateParams({ sort: tab === 'em-alta' ? 'popular' : 'recent', page: 1 });
   };
+
+  const tabs: { id: CatalogTab; label: string }[] = [
+    { id: 'todos', label: 'Todos os NFTs' },
+    { id: 'novos', label: 'Novos lançamentos' },
+    { id: 'em-alta', label: 'Em alta' },
+  ];
+
+  const sidebarTitle = 'text-[18px] font-bold leading-6';
 
   return (
-    <div id="catalog" className="bg-[#130C0A] text-[#FDF2DA]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        
-        {/* Main 2-column layout: Left Sidebar + Right Products Grid matching Figma Page 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* ========================================================== */}
-          {/* LEFT SIDEBAR (Figma exact: Coleções, Preço, Rede, Destaque) */}
-          {/* ========================================================== */}
-          <aside className="lg:col-span-3 space-y-8 bg-[#231611] border border-[#38210F] rounded-2xl p-5 text-xs text-[#A8907E]">
-            
-            {/* 1. Coleções */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-[#FDF2DA] text-sm tracking-wide font-mono">
-                Coleções
-              </h3>
-              <div className="space-y-1.5">
-                {collectionsList.map((col) => {
-                  const isSelected = queryParams.category === col.value;
-                  return (
+    <div id="catalog" className="mx-auto max-w-[1200px] px-6 md:px-4 xl:px-0">
+      <div className="md:flex md:items-start md:gap-12">
+        {/* Sidebar */}
+        <aside className="hidden w-[310px] shrink-0 md:block">
+          <div className="h-[786px] bg-card px-5 pt-[17px]">
+            <h3 className={sidebarTitle}>Coleções</h3>
+            <ul className="mt-2 pl-3">
+              {COLLECTIONS.map((c) => {
+                const selected = queryParams.category === c.value;
+                return (
+                  <li key={c.value}>
                     <button
-                      key={col.value}
-                      onClick={() =>
-                        onUpdateParams({
-                          category: isSelected ? 'all' : col.value,
-                          page: 1,
-                        })
-                      }
-                      className={`w-full flex items-center justify-between py-1 text-left transition-colors font-mono ${
-                        isSelected
-                          ? 'text-[#D1894B] font-bold'
-                          : 'hover:text-[#FDF2DA] text-[#A8907E]'
+                      onClick={() => onUpdateParams({ category: selected ? 'all' : c.value, page: 1 })}
+                      className={`flex h-10 w-full items-center justify-between pr-3 text-left text-[15px] ${
+                        selected ? 'text-brand-hi' : 'text-sand hover:text-brand-hi'
                       }`}
                     >
-                      <span className="truncate">{col.label}</span>
-                      <span className="font-mono text-[11px] text-[#7A6352]">
-                        ({col.count})
-                      </span>
+                      <span>{c.label}</span>
+                      <span>({c.count})</span>
                     </button>
-                  );
-                })}
-              </div>
-            </div>
+                  </li>
+                );
+              })}
+            </ul>
 
-            <div className="border-t border-[#38210F]" />
-
-            {/* 2. Faixa de preço */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-[#FDF2DA] text-sm tracking-wide font-mono">
-                Faixa de preço
-              </h3>
-              <p className="font-mono text-[11px] text-[#A8907E]">
-                Preço: {minPriceInput} - {maxPriceInput} ETH
-              </p>
-
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={minPriceInput}
-                  onChange={(e) => setMinPriceInput(e.target.value)}
-                  className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-2.5 py-1.5 text-xs text-[#FDF2DA] font-mono focus:border-[#D1894B] outline-none"
-                  placeholder="0.02"
-                />
-                <span className="text-[#7A6352]">-</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={maxPriceInput}
-                  onChange={(e) => setMaxPriceInput(e.target.value)}
-                  className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-2.5 py-1.5 text-xs text-[#FDF2DA] font-mono focus:border-[#D1894B] outline-none"
-                  placeholder="12.30"
-                />
-              </div>
-
-              <button
-                onClick={handleApplyPrice}
-                className="w-full py-2 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono rounded-md text-xs transition-colors uppercase tracking-wider"
-              >
-                Aplicar
-              </button>
-            </div>
-
-            <div className="border-t border-[#38210F]" />
-
-            {/* 3. Rede */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-[#FDF2DA] text-sm tracking-wide font-mono">
-                Rede
-              </h3>
-              <div className="space-y-1.5">
-                {networksList.map((net) => (
-                  <div
-                    key={net.label}
-                    className="flex items-center justify-between py-1 text-[#A8907E] hover:text-[#FDF2DA] cursor-pointer font-mono"
-                  >
-                    <span>{net.label}</span>
-                    <span className="font-mono text-[11px] text-[#7A6352]">
-                      ({net.count})
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="border-t border-[#38210F]" />
-
-            {/* 4. NFT EM DESTAQUE / OFERTA LIMITADA matching Figma Page 1 */}
-            <div className="space-y-2.5 pt-1">
-              <div className="space-y-0.5">
-                <span className="text-[10px] font-mono font-bold tracking-wider text-[#D1894B] uppercase block">
-                  NFT EM DESTAQUE
-                </span>
-                <h4 className="text-xs font-bold text-[#FDF2DA] tracking-wide uppercase font-mono">
-                  OFERTA LIMITADA
-                </h4>
-              </div>
-
+            <h3 className={`${sidebarTitle} mt-[35px]`}>Faixa de preço</h3>
+            <div className="relative ml-3 mt-[10px] h-4 w-[258px]">
+              <div className="absolute inset-x-2 top-[6px] h-1 rounded bg-ink" />
               <div
-                onClick={() => onSelectNft('sage-nomad-009')}
-                className="relative aspect-square rounded-xl overflow-hidden bg-[#130C0A] border border-[#38210F] hover:border-[#D1894B] cursor-pointer transition-colors"
+                className="absolute top-[6px] h-1 bg-brand"
+                style={{
+                  left: `${8 + (Math.min(Number(minPrice), SLIDER_MAX) / SLIDER_MAX) * 242}px`,
+                  width: `${Math.max(0, ((Math.min(Number(maxPrice), SLIDER_MAX) - Math.min(Number(minPrice), SLIDER_MAX)) / SLIDER_MAX) * 242)}px`,
+                }}
+              />
+              <input
+                type="range"
+                min={0}
+                max={SLIDER_MAX}
+                step={0.01}
+                value={minPrice}
+                aria-label="Preço mínimo"
+                onChange={(e) => setMinPrice(String(Math.min(Number(e.target.value), Number(maxPrice))))}
+                className="kurio-range"
+              />
+              <input
+                type="range"
+                min={0}
+                max={SLIDER_MAX}
+                step={0.01}
+                value={maxPrice}
+                aria-label="Preço máximo"
+                onChange={(e) => setMaxPrice(String(Math.max(Number(e.target.value), Number(minPrice))))}
+                className="kurio-range"
+              />
+            </div>
+            <p className="ml-3 mt-[14px] text-[15px] leading-6">
+              Preço: {fmt(minPrice)} - {fmt(maxPrice)} ETH
+            </p>
+            <button
+              onClick={applyPrice}
+              className="ml-3 mt-[9px] h-9 w-[92px] rounded-md bg-brand text-[16px] font-bold text-ink"
+            >
+              Aplicar
+            </button>
+
+            <h3 className={`${sidebarTitle} mt-[36px]`}>Rede</h3>
+            <ul className="mt-2 pl-3">
+              {NETWORKS.map((n) => (
+                <li key={n.label} className="flex h-10 items-center justify-between pr-3 text-[15px] text-sand">
+                  <span>{n.label}</span>
+                  <span>({n.count})</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mt-[23px] h-[470px] bg-[#261910] pt-[36px]">
+            <h3 className="pl-5 text-[24px] font-bold leading-8 text-brand-hi">NFT EM DESTAQUE</h3>
+            <p className="mt-[6px] text-center text-[22px] font-bold leading-8">OFERTA LIMITADA</p>
+            <button onClick={() => onSelectNft('sage-nomad-009')} className="relative mt-[14px] block">
+              <img src={IMG_CHAPEU} alt="Sage Nomad #009" className="h-[366px] w-[310px] rounded-3xl object-cover" />
+              <span className="absolute left-[130px] top-[170px] h-[14px] w-[14px] rounded-full bg-sand/70" />
+            </button>
+          </div>
+        </aside>
+
+        {/* Main column */}
+        <main className="min-w-0 flex-1">
+          <div className="flex items-start justify-between md:h-10">
+            <div className="flex gap-[21px] overflow-x-auto text-[15px] leading-6 md:overflow-visible">
+              {tabs.map((t) => {
+                const active = activeTab === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => pickTab(t.id)}
+                    className={`relative h-[26px] whitespace-nowrap md:-mt-[3px] ${
+                      active ? 'text-brand-hi' : 'text-cream hover:text-brand-hi'
+                    }`}
+                  >
+                    {t.label}
+                    {active && <span className="absolute inset-x-0 -bottom-[3px] h-[2px] bg-brand" />}
+                  </button>
+                );
+              })}
+            </div>
+            <label className="relative -mt-[3px] hidden items-center whitespace-nowrap text-[15px] md:flex">
+              Ordenar por:
+              <select
+                value={queryParams.sort || 'recent'}
+                onChange={(e) => onUpdateParams({ sort: e.target.value as SortOption, page: 1 })}
+                aria-label="Ordenar listagem"
+                className="ml-[9px] w-[189px] cursor-pointer bg-transparent text-[15px] text-cream outline-none"
               >
-                <img
-                  src="/src/assets/images/nft_ethereal_chronos_1794341378030.jpg"
-                  alt="Sage Nomad #009"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-2 left-2 right-2 p-2 rounded-lg bg-[#130C0A]/90 text-[11px] flex justify-between items-center">
-                  <span className="font-bold text-[#FDF2DA] truncate font-mono">Sage Nomad #009</span>
-                  <span className="font-mono text-[#D1894B] font-bold">1.69 ETH</span>
-                </div>
-              </div>
-            </div>
+                <option value="recent" className="bg-card">Listados recentemente</option>
+                <option value="price_asc" className="bg-card">Menor preço</option>
+                <option value="price_desc" className="bg-card">Maior preço</option>
+                <option value="popular" className="bg-card">Mais populares</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-0 top-[6px] h-4 w-4" />
+            </label>
+          </div>
 
-          </aside>
-
-          {/* ========================================================== */}
-          {/* RIGHT MAIN CATALOG (Figma exact: Tabs, Sort, Grid, Pagination) */}
-          {/* ========================================================== */}
-          <main className="lg:col-span-9 space-y-6">
-            
-            {/* Top Toolbar: Tabs on Left, Sort Dropdown on Right */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#38210F]">
-              
-              {/* Tabs: Todos os NFTs | Novos lançamentos | Em alta */}
-              <div className="flex items-center gap-6 text-sm font-semibold font-mono">
-                <button
-                  onClick={() => setActiveTab('todos')}
-                  className={`py-1 relative transition-colors ${
-                    activeTab === 'todos'
-                      ? 'text-[#FDF2DA] after:absolute after:bottom-[-17px] after:left-0 after:right-0 after:h-0.5 after:bg-[#D1894B]'
-                      : 'text-[#A8907E] hover:text-[#FDF2DA]'
-                  }`}
-                >
-                  Todos os NFTs
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('novos')}
-                  className={`py-1 relative transition-colors ${
-                    activeTab === 'novos'
-                      ? 'text-[#FDF2DA] after:absolute after:bottom-[-17px] after:left-0 after:right-0 after:h-0.5 after:bg-[#D1894B]'
-                      : 'text-[#A8907E] hover:text-[#FDF2DA]'
-                  }`}
-                >
-                  Novos lançamentos
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('em-alta')}
-                  className={`py-1 relative transition-colors ${
-                    activeTab === 'em-alta'
-                      ? 'text-[#FDF2DA] after:absolute after:bottom-[-17px] after:left-0 after:right-0 after:h-0.5 after:bg-[#D1894B]'
-                      : 'text-[#A8907E] hover:text-[#FDF2DA]'
-                  }`}
-                >
-                  Em alta
-                </button>
-              </div>
-
-              {/* Sort Dropdown matching Figma exact: Ordenar por: Listados recentemente */}
-              <div className="flex items-center gap-2 text-xs text-[#A8907E] font-mono">
-                <span className="whitespace-nowrap">Ordenar por:</span>
-                <select
-                  value={queryParams.sort || 'recent'}
-                  onChange={(e) => onUpdateParams({ sort: e.target.value as SortOption, page: 1 })}
-                  aria-label="Ordenar listagem"
-                  className="bg-[#231611] border border-[#38210F] rounded-md px-3 py-1.5 text-xs text-[#FDF2DA] focus:border-[#D1894B] outline-none font-mono"
-                >
-                  <option value="recent">Listados recentemente</option>
-                  <option value="price_asc">Menor preço</option>
-                  <option value="price_desc">Maior preço</option>
-                  <option value="popular">Mais populares</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Grid of Cards */}
+          <div className="mt-6 md:mt-[10px]">
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-[34px]">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <NFTSkeletonCard key={i} />
                 ))}
               </div>
             ) : isError ? (
-              <div className="text-center py-16 p-6 rounded-2xl bg-[#231611] border border-[#38210F] space-y-3">
-                <p className="text-rose-400 font-bold font-mono">Falha ao carregar obras</p>
-                <p className="text-xs text-[#A8907E]">
+              <div className="space-y-3 bg-card p-8 text-center">
+                <p className="font-bold">Falha ao carregar obras</p>
+                <p className="text-[14px] text-sand">
                   {(error as any)?.response?.data?.error || 'Não foi possível carregar os dados simulados.'}
                 </p>
-                <button
-                  onClick={() => refetch()}
-                  className="px-4 py-2 bg-[#D1894B] text-[#130C0A] font-bold text-xs rounded-md font-mono uppercase"
-                >
-                  Tentar Novamente
+                <button onClick={() => refetch()} className="h-10 rounded-md bg-brand px-4 text-[14px] font-bold text-ink">
+                  Tentar novamente
                 </button>
               </div>
             ) : nftItems.length === 0 ? (
-              <div className="text-center py-16 p-6 rounded-2xl bg-[#231611] border border-[#38210F] space-y-3">
-                <p className="text-[#FDF2DA] font-bold text-base font-mono">Nenhum NFT encontrado</p>
-                <p className="text-xs text-[#A8907E]">
-                  Nenhuma obra corresponde aos filtros ativos no momento.
-                </p>
-                <button
-                  onClick={onResetParams}
-                  className="px-4 py-2 bg-[#D1894B] text-[#130C0A] font-bold text-xs rounded-md font-mono uppercase"
-                >
-                  Limpar Todos os Filtros
+              <div className="space-y-3 bg-card p-8 text-center">
+                <p className="font-bold">Nenhum NFT encontrado</p>
+                <p className="text-[14px] text-sand">Nenhuma obra corresponde aos filtros ativos.</p>
+                <button onClick={onResetParams} className="h-10 rounded-md bg-brand px-4 text-[14px] font-bold text-ink">
+                  Limpar filtros
                 </button>
               </div>
             ) : (
-              <div className="space-y-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              <>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-6 max-md:pb-8 md:grid-cols-3 md:gap-x-[34px] md:gap-y-[66px]">
                   {nftItems.map((nft) => (
-                    <NFTCard
-                      key={nft.id}
-                      nft={nft}
-                      onSelect={onSelectNft}
-                      onToast={onToast}
-                    />
+                    <div key={nft.id} className="max-md:[&:nth-child(even)]:translate-y-[30px]">
+                      <NFTCard nft={nft} onSelect={onSelectNft} onToast={onToast} />
+                    </div>
                   ))}
                 </div>
 
-                {/* Pagination Controls matching Figma Page 1: 1 2 3 4 > */}
-                <div className="flex items-center justify-center gap-2 pt-6">
-                  {[1, 2, 3, 4].map((p) => {
-                    const isCurrent = (queryParams.page || 1) === p;
-                    return (
-                      <button
-                        key={p}
-                        onClick={() => onUpdateParams({ page: p })}
-                        className={`w-8 h-8 rounded-md font-mono text-xs font-bold transition-colors ${
-                          isCurrent
-                            ? 'bg-[#D1894B] text-[#130C0A]'
-                            : 'bg-[#231611] border border-[#38210F] text-[#A8907E] hover:text-[#FDF2DA]'
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    );
-                  })}
+                <div className="mt-10 flex justify-end gap-2 md:mt-[70px]">
+                  {[1, 2, 3, 4].map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => onUpdateParams({ page: p })}
+                      className={`h-[35px] w-[35px] rounded text-[18px] ${
+                        page === p ? 'bg-brand font-bold text-ink' : 'border border-[#3f2319] text-cream'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
                   <button
-                    onClick={() => onUpdateParams({ page: ((queryParams.page || 1) % 4) + 1 })}
-                    className="w-8 h-8 rounded-md bg-[#231611] border border-[#38210F] text-[#A8907E] hover:text-[#FDF2DA] flex items-center justify-center text-xs font-mono"
+                    aria-label="Próxima página"
+                    onClick={() => onUpdateParams({ page: (page % 4) + 1 })}
+                    className="flex h-[35px] w-[35px] items-center justify-center rounded bg-[#3f2319] text-cream"
                   >
-                    &gt;
+                    <ChevronRight className="h-5 w-5" />
                   </button>
                 </div>
-              </div>
+              </>
             )}
-
-          </main>
-
-        </div>
-
-        {/* ========================================================== */}
-        {/* MID-PAGE PROMOTIONAL SPLIT BANNERS (Figma exact Page 1) */}
-        {/* ========================================================== */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-16">
-          {/* Banner 1 */}
-          <div className="p-6 rounded-2xl bg-[#231611] border border-[#38210F] flex items-center gap-6">
-            <img
-              src="/src/assets/images/nft_cyber_valkyrie_1794341377253.jpg"
-              alt="Lançamentos gênesis"
-              referrerPolicy="no-referrer"
-              className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover shrink-0"
-            />
-            <div className="space-y-2 text-left">
-              <h3 className="text-base sm:text-lg font-bold font-mono text-[#FDF2DA] leading-snug">
-                Lançamentos gênesis<br />de edição limitada
-              </h3>
-              <p className="text-xs text-[#A8907E] leading-relaxed">
-                Colecione edições escassas diretamente dos criadores antes da revelação pública.
-              </p>
-              <button
-                onClick={() => onSelectNft('emerald-ape-042')}
-                className="text-xs font-bold font-mono text-[#D1894B] hover:text-[#E0985C] inline-flex items-center gap-1.5 transition-colors pt-1"
-              >
-                Explorar →
-              </button>
-            </div>
           </div>
-
-          {/* Banner 2 */}
-          <div className="p-6 rounded-2xl bg-[#231611] border border-[#38210F] flex items-center gap-6">
-            <img
-              src="/src/assets/images/nft_quantum_samurai_1794341379021.jpg"
-              alt="Arte digital selecionada"
-              referrerPolicy="no-referrer"
-              className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover shrink-0"
-            />
-            <div className="space-y-2 text-left">
-              <h3 className="text-base sm:text-lg font-bold font-mono text-[#FDF2DA] leading-snug">
-                Arte digital selecionada<br />e muito mais
-              </h3>
-              <p className="text-xs text-[#A8907E] leading-relaxed">
-                Explore novos artistas, coleções verificadas e obras digitais que definem a cultura.
-              </p>
-              <button
-                onClick={() => onSelectNft('neon-vessel-552')}
-                className="text-xs font-bold font-mono text-[#D1894B] hover:text-[#E0985C] inline-flex items-center gap-1.5 transition-colors pt-1"
-              >
-                Explorar →
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ========================================================== */}
-        {/* EDITORIAL SECTION: DIÁRIO DA CUNHAGEM (Figma exact Page 1) */}
-        {/* ========================================================== */}
-        <section id="aprenda" className="pt-20 space-y-8">
-          <div className="text-center space-y-2 max-w-2xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#FDF2DA] font-mono">
-              Diário da Cunhagem
-            </h2>
-            <p className="text-xs sm:text-sm text-[#A8907E]">
-              Histórias, guias e insights para colecionadores sobre o universo da propriedade digital.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Article 1 */}
-            <article className="p-4 rounded-xl bg-[#231611] border border-[#38210F] space-y-3 flex flex-col justify-between text-left">
-              <div className="space-y-2">
-                <img
-                  src="/src/assets/images/nft_cyber_valkyrie_1794341377253.jpg"
-                  alt="Artigo 1"
-                  referrerPolicy="no-referrer"
-                  className="w-full aspect-[4/3] rounded-lg object-cover"
-                />
-                <span className="text-[10px] text-[#A8907E] block font-mono">
-                  12 de setembro | Leitura de 6 min
-                </span>
-                <h3 className="text-sm font-bold font-mono text-[#FDF2DA] leading-snug">
-                  Como funciona a propriedade de NFTs
-                </h3>
-                <p className="text-xs text-[#A8907E] leading-relaxed">
-                  Aprenda a colecionar, negociar e verificar ativos digitais.
-                </p>
-              </div>
-              <button
-                onClick={() => onToast({ type: 'info', title: 'Artigo Educativo', description: 'Abrindo guia de propriedade de NFTs.' })}
-                className="text-xs font-bold font-mono text-[#D1894B] hover:text-[#E0985C] inline-flex items-center gap-1 pt-2"
-              >
-                Ler mais →
-              </button>
-            </article>
-
-            {/* Article 2 */}
-            <article className="p-4 rounded-xl bg-[#231611] border border-[#38210F] space-y-3 flex flex-col justify-between text-left">
-              <div className="space-y-2">
-                <img
-                  src="/src/assets/images/nft_ethereal_chronos_1794341378030.jpg"
-                  alt="Artigo 2"
-                  referrerPolicy="no-referrer"
-                  className="w-full aspect-[4/3] rounded-lg object-cover"
-                />
-                <span className="text-[10px] text-[#A8907E] block font-mono">
-                  13 de setembro | Leitura de 2 min
-                </span>
-                <h3 className="text-sm font-bold font-mono text-[#FDF2DA] leading-snug">
-                  10 artistas digitais para acompanhar
-                </h3>
-                <p className="text-xs text-[#A8907E] leading-relaxed">
-                  Conheça criadores que moldam a cultura digital.
-                </p>
-              </div>
-              <button
-                onClick={() => onToast({ type: 'info', title: 'Artigo Educativo', description: 'Abrindo lista de criadores em destaque.' })}
-                className="text-xs font-bold font-mono text-[#D1894B] hover:text-[#E0985C] inline-flex items-center gap-1 pt-2"
-              >
-                Ler mais →
-              </button>
-            </article>
-
-            {/* Article 3 */}
-            <article className="p-4 rounded-xl bg-[#231611] border border-[#38210F] space-y-3 flex flex-col justify-between text-left">
-              <div className="space-y-2">
-                <img
-                  src="/src/assets/images/nft_quantum_samurai_1794341379021.jpg"
-                  alt="Artigo 3"
-                  referrerPolicy="no-referrer"
-                  className="w-full aspect-[4/3] rounded-lg object-cover"
-                />
-                <span className="text-[10px] text-[#A8907E] block font-mono">
-                  15 de setembro | Leitura de 3 min
-                </span>
-                <h3 className="text-sm font-bold font-mono text-[#FDF2DA] leading-snug">
-                  Raridade, atributos e procedência
-                </h3>
-                <p className="text-xs text-[#A8907E] leading-relaxed">
-                  Entenda raridade, procedência, direitos autorais e utilidade.
-                </p>
-              </div>
-              <button
-                onClick={() => onToast({ type: 'info', title: 'Artigo Educativo', description: 'Abrindo guia de raridade de NFTs.' })}
-                className="text-xs font-bold font-mono text-[#D1894B] hover:text-[#E0985C] inline-flex items-center gap-1 pt-2"
-              >
-                Ler mais →
-              </button>
-            </article>
-
-            {/* Article 4 */}
-            <article className="p-4 rounded-xl bg-[#231611] border border-[#38210F] space-y-3 flex flex-col justify-between text-left">
-              <div className="space-y-2">
-                <img
-                  src="/src/assets/images/nft_sol_solarium_1794341379684.jpg"
-                  alt="Artigo 4"
-                  referrerPolicy="no-referrer"
-                  className="w-full aspect-[4/3] rounded-lg object-cover"
-                />
-                <span className="text-[10px] text-[#A8907E] block font-mono">
-                  15 de setembro | Leitura de 2 min
-                </span>
-                <h3 className="text-sm font-bold font-mono text-[#FDF2DA] leading-snug">
-                  Como proteger sua carteira
-                </h3>
-                <p className="text-xs text-[#A8907E] leading-relaxed">
-                  Proteja sua carteira, seus ativos e sua identidade.
-                </p>
-              </div>
-              <button
-                onClick={() => onToast({ type: 'info', title: 'Artigo Educativo', description: 'Abrindo guia de segurança de carteiras.' })}
-                className="text-xs font-bold font-mono text-[#D1894B] hover:text-[#E0985C] inline-flex items-center gap-1 pt-2"
-              >
-                Ler mais →
-              </button>
-            </article>
-          </div>
-        </section>
-
-        {/* ========================================================== */}
-        {/* VALUE PROPOSITIONS & NEWSLETTER STRIP (Figma exact Page 1) */}
-        {/* ========================================================== */}
-        <section id="criadores" className="pt-20 pb-10 border-t border-[#38210F] mt-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-start">
-            
-            {/* Feature W */}
-            <div className="space-y-3 text-left">
-              <div className="w-10 h-10 rounded-full bg-[#D1894B]/15 border border-[#D1894B]/30 text-[#D1894B] font-mono font-bold flex items-center justify-center text-sm">
-                W
-              </div>
-              <h3 className="text-sm font-bold font-mono text-[#FDF2DA]">
-                Segurança da carteira
-              </h3>
-              <p className="text-xs text-[#A8907E] leading-relaxed">
-                Proteja sua carteira e colecione arte digital verificada com confiança.
-              </p>
-            </div>
-
-            {/* Feature C */}
-            <div className="space-y-3 text-left">
-              <div className="w-10 h-10 rounded-full bg-[#D1894B]/15 border border-[#D1894B]/30 text-[#D1894B] font-mono font-bold flex items-center justify-center text-sm">
-                C
-              </div>
-              <h3 className="text-sm font-bold font-mono text-[#FDF2DA]">
-                Criadores em destaque
-              </h3>
-              <p className="text-xs text-[#A8907E] leading-relaxed">
-                Conheça artistas, estúdios e comunidades que moldam a cultura digital na rede.
-              </p>
-            </div>
-
-            {/* Feature D */}
-            <div className="space-y-3 text-left">
-              <div className="w-10 h-10 rounded-full bg-[#D1894B]/15 border border-[#D1894B]/30 text-[#D1894B] font-mono font-bold flex items-center justify-center text-sm">
-                D
-              </div>
-              <h3 className="text-sm font-bold font-mono text-[#FDF2DA]">
-                Alertas de lançamentos
-              </h3>
-              <p className="text-xs text-[#A8907E] leading-relaxed">
-                Receba calendários de cunhagem, novidades de listas de acesso e análises do mercado.
-              </p>
-            </div>
-
-            {/* Newsletter Box */}
-            <div className="p-5 rounded-2xl bg-[#231611] border border-[#38210F] space-y-3 text-left">
-              <h3 className="text-xs font-bold font-mono text-[#FDF2DA] uppercase tracking-wider">
-                Antecipe-se ao próximo lançamento
-              </h3>
-              <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
-                <input
-                  type="email"
-                  required
-                  value={newsletterEmail}
-                  onChange={(e) => setNewsletterEmail(e.target.value)}
-                  placeholder="digite seu e-mail..."
-                  className="flex-1 bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2 text-xs text-[#FDF2DA] placeholder-[#7A6352] outline-none focus:border-[#D1894B] font-mono"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono text-xs rounded-md transition-colors uppercase tracking-wider"
-                >
-                  {newsletterSent ? 'Pronto!' : 'Enviar'}
-                </button>
-              </form>
-              <p className="text-[11px] text-[#A8907E] leading-relaxed">
-                Receba lançamentos selecionados, histórias de criadores e novidades do mercado.
-              </p>
-            </div>
-
-          </div>
-        </section>
-
+        </main>
       </div>
+
+      {/* Promo banners */}
+      <div className="mt-24 hidden grid-cols-2 gap-7 md:grid">
+        {[
+          { img: IMG_FONE, title: ['Lançamentos gênesis', 'de edição limitada'], text: 'Colecione edições escassas diretamente dos criadores antes da revelação pública.', id: 'emerald-ape-042' },
+          { img: IMG_TERNO, title: ['Arte digital selecionada', 'e muito mais'], text: 'Explore novos artistas, coleções verificadas e obras digitais que definem a cultura.', id: 'neon-vessel-552' },
+        ].map((b) => (
+          <div key={b.id} className="relative flex h-[250px] overflow-hidden rounded-lg bg-card">
+            <img src={b.img} alt={b.title.join(' ')} className="h-[250px] w-[287px] shrink-0 rounded-2xl object-cover" />
+            <div className="flex-1 pl-2 pr-[30px] pt-[44px] text-right">
+              <h3 className="text-[18px] font-bold leading-6">
+                {b.title[0]}
+                <br />
+                {b.title[1]}
+              </h3>
+              <p className="mt-[16px] text-[14px] leading-6 text-sand">{b.text}</p>
+            </div>
+            <button
+              onClick={() => onSelectNft(b.id)}
+              className="absolute bottom-[46px] right-[30px] flex h-10 w-[140px] items-center justify-center gap-2 rounded-md bg-brand text-[14px] font-bold text-ink"
+            >
+              Explorar <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Diário da Cunhagem */}
+      <section id="aprenda" className="hidden md:block">
+        <h2 className="mt-[97px] text-center text-[28px] font-bold leading-9">Diário da Cunhagem</h2>
+        <p className="mx-auto mt-[11px] text-center text-[14px] leading-6 text-sand">
+          Histórias, guias e insights para colecionadores sobre o universo da propriedade digital.
+        </p>
+        <div className="mt-[37px] grid grid-cols-4 gap-6 xl:grid-cols-[repeat(4,268px)]">
+          {ARTICLES.map((a) => (
+            <article key={a.title} className="h-[369px] overflow-hidden rounded-lg bg-card">
+              <img src={a.img} alt="" className="h-[195px] w-full object-cover" />
+              <div className="px-4 pt-[13px]">
+                <p className="text-[12px] leading-4 text-sand">{a.meta}</p>
+                <h3 className="mt-[10px] text-[16px] font-bold leading-[21px]">{a.title}</h3>
+                <p className="mt-[9px] text-[12px] leading-4 text-sand">{a.text}</p>
+                <button
+                  onClick={() => onToast({ type: 'info', title: 'Artigo', description: a.title })}
+                  className="mt-[10px] text-[12px] font-bold text-brand"
+                >
+                  Ler mais →
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

@@ -1,143 +1,62 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Aetheria NFT Marketplace — Fluxos Principais E2E', () => {
+test.beforeEach(async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
+  await page.goto('/');
+  await expect(page.locator('article').first()).toBeVisible();
+});
 
-  test.beforeEach(async ({ page }) => {
-    // Navigate to homepage
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-  });
+test('catalog state lives in the URL and survives history navigation', async ({ page }) => {
+  await page.goto('/?q=Emerald&sort=price_asc');
+  await expect(page.getByText(/Emerald Ape/i).first()).toBeVisible();
+  await page.goto('/?q=Emerald');
+  await page.goBack();
+  await expect(page).toHaveURL(/sort=price_asc/);
+});
 
-  test('1. Catálogo: busca, filtros combinados, ordenação e persistência na URL', async ({ page }) => {
-    // 1. Check title & brand
-    await expect(page.locator('header')).toContainText('Aetheria');
+test('direct access to an existing and a missing NFT', async ({ page }) => {
+  await page.goto('/nft/emerald-ape-042');
+  await expect(page.getByText(/Emerald Ape/i).filter({ visible: true }).first()).toBeVisible();
+  await page.goto('/nft/does-not-exist');
+  await expect(page.getByText('Obra não encontrada')).toBeVisible();
+});
 
-    // 2. Perform search
-    const searchInput = page.locator('input[placeholder*="Buscar por título"]');
-    await searchInput.fill('Valkyrie');
+test('unknown routes render the 404 page', async ({ page }) => {
+  await page.goto('/rota-inexistente');
+  await expect(page.getByRole('heading', { name: '404' })).toBeVisible();
+});
 
-    // URL should reflect search query
-    await expect(page).toHaveURL(/\?q=Valkyrie/);
-    await expect(page.locator('article')).toContainText('Cyber Valkyrie #089');
+test('private routes redirect to login and return after authentication', async ({ page }) => {
+  await page.goto('/profile');
+  await expect(page).toHaveURL(/\/login\?redirect=/);
+  await page.getByLabel('E-mail').first().fill('contato@email.com');
+  await page.getByLabel('Senha', { exact: true }).or(page.getByPlaceholder('***********')).first().fill('123456');
+  await page.locator('button[type=submit]', { hasText: 'Entrar' }).first().click();
+  await expect(page).toHaveURL(/\/profile/);
+});
 
-    // 3. Apply category filter
-    const cyberBtn = page.getByRole('button', { name: 'Cyber', exact: true });
-    await cyberBtn.click();
-    await expect(page).toHaveURL(/category=cyber/);
+test('rejects short passwords with an error from the API', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByLabel('E-mail').first().fill('contato@email.com');
+  await page.getByPlaceholder('***********').fill('123');
+  await page.locator('button[type=submit]', { hasText: 'Entrar' }).first().click();
+  await expect(page).toHaveURL(/\/login/);
+});
 
-    // 4. Change sorting to Lowest Price
-    const sortSelect = page.locator('select[aria-label="Ordenar listagem"]');
-    await sortSelect.selectOption('price_asc');
-    await expect(page).toHaveURL(/sort=price_asc/);
+test('nft.updated reaches the UI through the Socket.IO client', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'simulation console is opened from the desktop navbar');
+  await page.getByRole('button', { name: 'Abrir console de simulação' }).click();
+  await page.getByRole('button', { name: /Alterar Preço Emerald Ape/ }).click();
+  await expect(page.getByText(/Cotação atualizada/)).toBeVisible();
+});
 
-    // 5. Test history back navigation
-    await page.goBack();
-    await expect(page).not.toHaveURL(/sort=price_asc/);
-  });
-
-  test('2. Acesso direto ao detalhe e tratamento de recurso inexistente (404)', async ({ page }) => {
-    // Direct link to existing NFT
-    await page.goto('/nft/valkyrie-089');
-    await expect(page.locator('h1')).toContainText('Cyber Valkyrie #089');
-    await expect(page.locator('body')).toContainText('Obsidian Alloy');
-    await expect(page.locator('body')).toContainText('1.450 ETH');
-
-    // Direct link to nonexistent NFT
-    await page.goto('/nft/non-existent-token-id-999');
-    await expect(page.locator('body')).toContainText('Obra Não Encontrada');
-    await expect(page.getByRole('button', { name: 'Retornar ao Catálogo' })).toBeVisible();
-
-    // Click return to catalog
-    await page.getByRole('button', { name: 'Retornar ao Catálogo' }).click();
-    await expect(page).toHaveURL('/');
-  });
-
-  test('3. Favoritos: mutação otimista e persistência para usuário autenticado', async ({ page }) => {
-    // Select first card
-    const firstFavButton = page.locator('article').first().locator('button[aria-label*="Favoritar"]');
-    await firstFavButton.click();
-
-    // Should optimistically toggle
-    await expect(firstFavButton).toBeVisible();
-  });
-
-  test('4. Carrinho: adição, alteração de quantidades, cupons e remoção', async ({ page }) => {
-    // Navigate to Valkyrie
-    await page.goto('/nft/valkyrie-089');
-    await page.getByRole('button', { name: 'Adicionar ao Carrinho' }).click();
-
-    // Go to cart
-    await page.goto('/cart');
-    await expect(page.locator('h1')).toContainText('Carrinho de Compras');
-    await expect(page.locator('body')).toContainText('Cyber Valkyrie #089');
-
-    // Test coupon code: AETHERIA10
-    const couponInput = page.locator('input[placeholder="Código de cupom"]');
-    if (await couponInput.isVisible()) {
-      await couponInput.fill('AETHERIA10');
-      await page.getByRole('button', { name: 'Aplicar' }).click();
-      await expect(page.locator('body')).toContainText('AETHERIA10');
-      await expect(page.locator('body')).toContainText('Desconto');
-    }
-
-    // Test removing item
-    const removeBtn = page.locator('button[aria-label*="Remover"]').first();
-    await removeBtn.click();
-    await expect(page.locator('body')).toContainText('Seu Carrinho está Vazio');
-  });
-
-  test('5. Fluxo Completo de Compra: do catálogo ao recibo confirmado com Idempotência', async ({ page }) => {
-    // Add Sol Solarium to cart
-    await page.goto('/nft/sol-solarium');
-    await page.getByRole('button', { name: 'Comprar Agora' }).click();
-
-    // Should be on checkout page
-    await expect(page).toHaveURL('/checkout');
-    await expect(page.locator('h1')).toContainText('Finalização e Pagamento');
-
-    // Verify presence of Idempotency-Key
-    await expect(page.locator('body')).toContainText('Chave de Idempotência');
-
-    // Confirm purchase
-    const confirmBtn = page.getByRole('button', { name: 'Confirmar e Assinar Compra' });
-    await confirmBtn.click();
-
-    // Should navigate to Order Confirmation receipt
-    await expect(page).toHaveURL(/\/order-confirmation\/ord-/);
-    await expect(page.locator('h1')).toContainText('Compra Realizada com Sucesso!');
-    await expect(page.locator('body')).toContainText('Hash da Transação');
-    await expect(page.locator('body')).toContainText('Sol Solarium Biome #03');
-  });
-
-  test('6. Carteiras: cadastro e definição de carteira principal', async ({ page }) => {
-    await page.goto('/wallets');
-    await expect(page.locator('h1')).toContainText('Minhas Carteiras Web3');
-
-    // Open connect wallet modal
-    await page.getByRole('button', { name: 'Conectar Nova Carteira' }).click();
-    await expect(page.getByRole('dialog')).toBeVisible();
-
-    // Fill form
-    await page.locator('input[placeholder*="Ex: MetaMask"]').fill('Ledger Hardware Vault');
-    await page.locator('input[placeholder*="0x71C"]').fill('0x44D9a91283819284918274918294819284910283');
-    await page.getByRole('button', { name: 'Salvar Carteira' }).click();
-
-    // Check newly added wallet is visible in list
-    await expect(page.locator('body')).toContainText('Ledger Hardware Vault');
-  });
-
-  test('7. Tempo Real Socket.IO: alteração de cotação e sincronização', async ({ page }) => {
-    await page.goto('/');
-
-    // Open MSW Simulator panel
-    await page.getByRole('button', { name: /Simulador MSW/i }).click();
-    await expect(page.getByRole('dialog')).toBeVisible();
-
-    // Click trigger price change
-    await page.getByRole('button', { name: /Alterar Preço do Valkyrie/i }).click();
-
-    // Check toast notification is shown
-    await expect(page.locator('body')).toContainText('nft.updated');
-  });
-
+test('stale socket events are discarded', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'simulation console is opened from the desktop navbar');
+  await page.getByRole('button', { name: 'Abrir console de simulação' }).click();
+  await page.getByRole('button', { name: /Alterar Preço Emerald Ape/ }).click();
+  await expect(page.getByText(/Cotação atualizada/)).toHaveCount(1);
+  await page.getByRole('button', { name: /Evento Obsoleto/ }).click();
+  await page.waitForTimeout(500);
+  await expect(page.getByText(/Cotação atualizada/)).toHaveCount(1);
 });

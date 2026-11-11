@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import {
-  ArrowLeft,
-  CheckCircle,
-  AlertCircle,
-  RefreshCw,
-  Lock,
-} from 'lucide-react';
+import { AlertCircle, ChevronDown, ChevronLeft, MoreVertical, Wallet as WalletIcon } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { useWallets } from '../hooks/useWallets';
@@ -20,25 +14,59 @@ interface CheckoutPageProps {
   onToast: (toast: { type: 'success' | 'error' | 'info'; title: string; description?: string }) => void;
 }
 
-export function CheckoutPage({
-  onBackToCart,
-  onOrderSuccess,
-  onGoToLogin,
-  onToast,
-}: CheckoutPageProps) {
+type Provider = 'MetaMask' | 'Coinbase' | 'WalletConnect';
+
+const inputCls =
+  'h-10 w-full border border-line bg-transparent px-3 text-[14px] text-cream outline-none focus:border-brand';
+
+function Field({ label, required, children }: { label?: string; required?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="h-6 text-[15px] leading-6">
+        {label}
+        {required && <span className="ml-[1px] text-[22px] leading-none text-star">*</span>}
+      </div>
+      <div className="mt-[3px]">{children}</div>
+    </div>
+  );
+}
+
+function Select({ children, ...rest }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <div className="relative">
+      <select {...rest} className={`${inputCls} cursor-pointer pr-9`}>
+        {children}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3 top-[11px] h-[18px] w-[18px] text-brand" />
+    </div>
+  );
+}
+
+function Radio({ checked }: { checked: boolean }) {
+  return (
+    <span
+      className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border ${
+        checked ? 'border-brand' : 'border-brand/60'
+      }`}
+    >
+      {checked && <span className="h-[10px] w-[10px] rounded-full bg-brand" />}
+    </span>
+  );
+}
+
+const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+
+export function CheckoutPage({ onBackToCart, onOrderSuccess, onToast }: CheckoutPageProps) {
   const { items, quote, activeCoupon } = useCart();
   const { user } = useAuth();
   const { wallets } = useWallets();
   const { createOrder, isCreatingOrder } = useOrders();
 
-  // Form fields exactly matching Figma Page 4
   const [displayName, setDisplayName] = useState(user?.displayName || user?.name || 'Nova Sato');
   const [username, setUsername] = useState(user?.username || 'novasato');
   const [network, setNetwork] = useState<BlockchainNetwork>('Ethereum');
   const [profileName, setProfileName] = useState(user?.profileName || 'Nova Sato Collector');
-  const [walletAddress, setWalletAddress] = useState(
-    wallets[0]?.address || '0xA91F4a82C981249817294819284102948201E82C'
-  );
+  const [walletAddress, setWalletAddress] = useState(wallets[0]?.address || '0xA91F4a82C981249817294819284102948201E82C');
   const [secondaryEns, setSecondaryEns] = useState('');
   const [walletType, setWalletType] = useState('MetaMask');
   const [referralCode, setReferralCode] = useState('');
@@ -46,418 +74,311 @@ export function CheckoutPage({
   const [ensName, setEnsName] = useState(user?.ensName || 'nova.kurio.eth');
   const [useOtherWallet, setUseOtherWallet] = useState(false);
   const [observation, setObservation] = useState('');
-
-  // Selected payment provider matching Figma Page 4
-  const [selectedProvider, setSelectedProvider] = useState<'MetaMask' | 'Coinbase' | 'WalletConnect'>('MetaMask');
-  const [simulateSignatureReject, setSimulateSignatureReject] = useState(false);
+  const [provider, setProvider] = useState<Provider>('Coinbase');
+  const [simulateReject, setSimulateReject] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+  const [idempotencyKey] = useState(() => `figma-order-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`);
 
-  // Persistent attempt idempotency key
-  const [idempotencyKey] = useState<string>(
-    () => `figma-order-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
-  );
-
-  const handleConfirmPurchase = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     setErrorBanner(null);
 
-    if (simulateSignatureReject) {
-      setErrorBanner('Transação rejeitada na carteira simulada (User rejected signature - code 4001).');
-      onToast({
-        type: 'error',
-        title: 'Assinatura Rejeitada',
-        description: 'A transação foi recusada pela carteira.',
-      });
+    if (simulateReject) {
+      const msg = 'Transação rejeitada na carteira simulada (User rejected signature - code 4001).';
+      setErrorBanner(msg);
+      onToast({ type: 'error', title: 'Assinatura rejeitada', description: 'A transação foi recusada pela carteira.' });
       return;
     }
 
     try {
-      const order = await createOrder({
-        walletAddress,
-        network,
-        couponCode: activeCoupon || undefined,
-        idempotencyKey,
-      });
-
-      onToast({
-        type: 'success',
-        title: 'Compra Confirmada!',
-        description: 'Transação emitida na rede com sucesso.',
-      });
-
+      const order = await createOrder({ walletAddress, network, couponCode: activeCoupon || undefined, idempotencyKey });
+      onToast({ type: 'success', title: 'Compra confirmada', description: 'Transação emitida na rede com sucesso.' });
       onOrderSuccess(order.id);
     } catch (err: any) {
       const msg = err?.response?.data?.error || err?.message || 'Falha ao processar pagamento.';
       setErrorBanner(msg);
-      onToast({
-        type: 'error',
-        title: 'Erro na Compra',
-        description: msg,
-      });
+      onToast({ type: 'error', title: 'Erro na compra', description: msg });
     }
   };
 
+  const subtotal = formatEthDisplay(quote?.subtotalEth || '0');
+  const fee = quote?.gasFeeEth || '0.016';
+  const total = quote?.totalEth || '0';
+  const discount = quote && parseFloat(quote.discountEth) > 0 ? `- ${quote.discountEth}` : '(-) 00.00';
+
+  const providerRows: { id: Provider; label: string; letter?: string }[] = [
+    { id: 'WalletConnect', label: 'WalletConnect', letter: 'W' },
+    { id: 'MetaMask', label: 'MetaMask', letter: 'M' },
+    { id: 'Coinbase', label: 'Coinbase Wallet' },
+  ];
+
+  const banner = errorBanner && (
+    <div className="mt-4 flex items-center gap-2 border border-brand p-3 text-[13px]">
+      <AlertCircle className="h-4 w-4 shrink-0 text-brand" />
+      <span>{errorBanner}</span>
+    </div>
+  );
+
   return (
-    <div className="bg-[#130C0A] text-[#FDF2DA] py-8 lg:py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        
-        {/* Breadcrumb matching Figma Page 4 exact: Início / Mercado / Pagamento */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-[#A8907E] font-mono">
-          <button onClick={onBackToCart} className="hover:text-[#FDF2DA]">Início</button>
+    <>
+      {/* ================= Desktop (Figma page 4) ================= */}
+      <div className="mx-auto hidden max-w-[1200px] px-4 md:block xl:px-0">
+        <nav aria-label="Breadcrumb" className="mt-[29px] flex h-6 items-center gap-[9px] text-[15px] font-bold">
+          <button onClick={onBackToCart}>Início</button>
           <span>/</span>
-          <button onClick={onBackToCart} className="hover:text-[#FDF2DA]">Mercado</button>
+          <button onClick={onBackToCart}>Mercado</button>
           <span>/</span>
-          <span className="text-[#FDF2DA] font-semibold">Pagamento</span>
+          <span>Pagamento</span>
         </nav>
+        {banner}
 
-        {errorBanner && (
-          <div className="p-4 rounded-xl bg-rose-950/60 border border-rose-800 text-xs text-rose-200 flex items-center gap-2.5 font-mono">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span>{errorBanner}</span>
-          </div>
-        )}
+        <form onSubmit={submit} className="mt-[16px] flex gap-[32px]">
+          <div className="w-[763px] shrink-0">
+            <h2 className="h-6 text-[17px] font-bold leading-6">Perfil do colecionador</h2>
 
-        <form onSubmit={handleConfirmPurchase} className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start text-left">
-          
-          {/* ========================================================== */}
-          {/* LEFT COLUMN: Perfil do colecionador (Figma Page 4 exact)   */}
-          {/* ========================================================== */}
-          <div className="lg:col-span-7 space-y-6">
-            <h2 className="text-base font-bold font-mono text-[#FDF2DA] tracking-wide">
-              Perfil do colecionador
-            </h2>
+            <div className="mt-[10px] grid grid-cols-2 gap-x-[23px] gap-y-[9px]">
+              <Field label="Nome de exibição" required>
+                <input required value={displayName} onChange={(e) => setDisplayName(e.target.value)} className={inputCls} />
+              </Field>
+              <Field label="Nome de usuário" required>
+                <input required value={username} onChange={(e) => setUsername(e.target.value)} className={inputCls} />
+              </Field>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
-              
-              {/* Nome de exibição* */}
-              <div className="space-y-1.5">
-                <label className="text-[#A8907E] font-medium block">
-                  Nome de exibição*
-                </label>
+              <Field label="Rede" required>
+                <Select value={network} onChange={(e) => setNetwork(e.target.value as BlockchainNetwork)} aria-label="Rede">
+                  <option value="Ethereum" className="bg-card">Ethereum</option>
+                  <option value="Polygon" className="bg-card">Polygon</option>
+                  <option value="Solana" className="bg-card">Solana</option>
+                  <option value="Arbitrum" className="bg-card">Arbitrum</option>
+                </Select>
+              </Field>
+              <Field label="Nome do perfil" required>
+                <input required value={profileName} onChange={(e) => setProfileName(e.target.value)} className={inputCls} />
+              </Field>
+
+              <Field label="Endereço da carteira" required>
                 <input
-                  type="text"
                   required
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full bg-[#231611] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
-                />
-              </div>
-
-              {/* Nome de usuário* */}
-              <div className="space-y-1.5">
-                <label className="text-[#A8907E] font-medium block">
-                  Nome de usuário*
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-[#231611] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] font-mono outline-none focus:border-[#D1894B]"
-                />
-              </div>
-
-              {/* Rede * */}
-              <div className="space-y-1.5">
-                <label className="text-[#A8907E] font-medium block">
-                  Rede *
-                </label>
-                <select
-                  value={network}
-                  onChange={(e) => setNetwork(e.target.value as BlockchainNetwork)}
-                  className="w-full bg-[#231611] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
-                >
-                  <option value="Ethereum">Ethereum</option>
-                  <option value="Polygon">Polygon</option>
-                  <option value="Solana">Solana</option>
-                  <option value="Arbitrum">Arbitrum</option>
-                </select>
-              </div>
-
-              {/* Nome do perfil* */}
-              <div className="space-y-1.5">
-                <label className="text-[#A8907E] font-medium block">
-                  Nome do perfil*
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={profileName}
-                  onChange={(e) => setProfileName(e.target.value)}
-                  className="w-full bg-[#231611] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
-                />
-              </div>
-
-              {/* Endereço da carteira* */}
-              <div className="space-y-1.5">
-                <label className="text-[#A8907E] font-medium block">
-                  Endereço da carteira*
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Endereço 0x da carteira"
                   value={walletAddress}
                   onChange={(e) => setWalletAddress(e.target.value)}
-                  className="w-full bg-[#231611] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] font-mono outline-none focus:border-[#D1894B]"
+                  placeholder="Endereço 0x da carteira"
+                  className={`${inputCls} pl-[22px]`}
                 />
-              </div>
-
-              {/* ENS ou carteira secundária (opcional) */}
-              <div className="space-y-1.5">
-                <label className="text-[#A8907E] font-medium block">
-                  ENS ou carteira secundária (opcional)
-                </label>
+              </Field>
+              <Field>
                 <input
-                  type="text"
-                  placeholder="secundaria.eth ou 0x..."
                   value={secondaryEns}
                   onChange={(e) => setSecondaryEns(e.target.value)}
-                  className="w-full bg-[#231611] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] font-mono outline-none focus:border-[#D1894B]"
+                  placeholder="ENS ou carteira secundária (opcional)"
+                  aria-label="ENS ou carteira secundária (opcional)"
+                  className={`${inputCls} pl-[22px]`}
                 />
-              </div>
+              </Field>
 
-              {/* Tipo de carteira* */}
-              <div className="space-y-1.5">
-                <label className="text-[#A8907E] font-medium block">
-                  Tipo de carteira*
-                </label>
-                <select
-                  value={walletType}
-                  onChange={(e) => setWalletType(e.target.value)}
-                  className="w-full bg-[#231611] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
-                >
-                  <option value="MetaMask">MetaMask</option>
-                  <option value="WalletConnect">WalletConnect</option>
-                  <option value="Coinbase">Coinbase Wallet</option>
-                  <option value="Ledger">Ledger Hardware</option>
-                </select>
-              </div>
+              <Field label="Tipo de carteira" required>
+                <Select value={walletType} onChange={(e) => setWalletType(e.target.value)} aria-label="Tipo de carteira">
+                  <option value="MetaMask" className="bg-card">MetaMask</option>
+                  <option value="WalletConnect" className="bg-card">WalletConnect</option>
+                  <option value="Coinbase" className="bg-card">Coinbase Wallet</option>
+                  <option value="Ledger" className="bg-card">Ledger</option>
+                </Select>
+              </Field>
+              <Field label="Código de indicação" required>
+                <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} className={inputCls} />
+              </Field>
 
-              {/* Código de indicação* */}
-              <div className="space-y-1.5">
-                <label className="text-[#A8907E] font-medium block">
-                  Código de indicação*
-                </label>
-                <input
-                  type="text"
-                  placeholder="KURIO-VIP-2026"
-                  value={referralCode}
-                  onChange={(e) => setReferralCode(e.target.value)}
-                  className="w-full bg-[#231611] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] font-mono outline-none focus:border-[#D1894B]"
-                />
-              </div>
-
-              {/* E-mail* */}
-              <div className="space-y-1.5">
-                <label className="text-[#A8907E] font-medium block">
-                  E-mail*
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#231611] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
-                />
-              </div>
-
-              {/* Nome ENS * */}
-              <div className="space-y-1.5">
-                <label className="text-[#A8907E] font-medium block">
-                  Nome ENS *
-                </label>
+              <Field label="E-mail" required>
+                <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+              </Field>
+              <Field label="Nome ENS" required>
                 <div className="flex">
+                  <div className="relative w-[78px] shrink-0">
+                    <div className={`${inputCls} flex items-center`}>.eth</div>
+                    <ChevronDown className="pointer-events-none absolute right-2 top-[11px] h-[18px] w-[18px] text-brand" />
+                  </div>
                   <input
-                    type="text"
                     value={ensName.replace('.eth', '')}
                     onChange={(e) => setEnsName(e.target.value + '.eth')}
-                    className="flex-1 bg-[#231611] border border-r-0 border-[#38210F] rounded-l-md px-3 py-2.5 text-xs text-[#FDF2DA] font-mono outline-none focus:border-[#D1894B]"
+                    aria-label="Nome ENS"
+                    className={`${inputCls} border-l-0`}
                   />
-                  <span className="bg-[#38210F]/50 border border-[#38210F] rounded-r-md px-3 py-2.5 text-xs text-[#A8907E] font-mono">
-                    .eth
-                  </span>
                 </div>
-              </div>
-
+              </Field>
             </div>
 
-            {/* Checkbox: Usar outra carteira? */}
-            <div className="pt-2">
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-[#A8907E] font-mono">
-                <input
-                  type="checkbox"
-                  checked={useOtherWallet}
-                  onChange={(e) => setUseOtherWallet(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#D1894B] focus:ring-[#D1894B] bg-[#130C0A] border-[#38210F]"
-                />
-                <span>Usar outra carteira?</span>
-              </label>
-            </div>
+            <label className="mt-[28px] flex h-6 cursor-pointer items-center gap-[7px] text-[15px]">
+              <input type="checkbox" checked={useOtherWallet} onChange={(e) => setUseOtherWallet(e.target.checked)} className="sr-only" />
+              <Radio checked={useOtherWallet} />
+              Usar outra carteira?
+            </label>
 
-            {/* Observação do colecionador (opcional) */}
-            <div className="space-y-1.5 font-mono">
-              <label className="text-xs text-[#A8907E] font-medium block">
-                Observação do colecionador (opcional)
-              </label>
-              <textarea
-                rows={2}
-                value={observation}
-                onChange={(e) => setObservation(e.target.value)}
-                placeholder="Instruções para liquidação ou custódia de NFT..."
-                className="w-full bg-[#231611] border border-[#38210F] rounded-md p-3 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
-              />
-            </div>
-
-            {/* Simulation option */}
-            <div className="pt-2 border-t border-[#38210F] flex items-center justify-between text-xs text-[#7A6352] font-mono">
-              <span>Simular recusa na carteira (Code 4001):</span>
-              <input
-                type="checkbox"
-                checked={simulateSignatureReject}
-                onChange={(e) => setSimulateSignatureReject(e.target.checked)}
-                className="w-4 h-4 accent-[#D1894B]"
-              />
-            </div>
-
+            <p className="mt-[19px] text-[15px] leading-6">Observação do colecionador (opcional)</p>
+            <textarea
+              value={observation}
+              onChange={(e) => setObservation(e.target.value)}
+              aria-label="Observação do colecionador"
+              className="mt-[2px] h-[232px] w-[350px] resize-none border border-line bg-transparent p-3 text-[14px] outline-none focus:border-brand"
+            />
+            <label className="mt-3 flex cursor-pointer items-center gap-2 text-[12px] text-sand">
+              <input type="checkbox" checked={simulateReject} onChange={(e) => setSimulateReject(e.target.checked)} className="accent-[#d28a4c]" />
+              Simular recusa na carteira (código 4001)
+            </label>
           </div>
 
-          {/* ========================================================== */}
-          {/* RIGHT COLUMN: Seus NFTs & Pagamento (Figma Page 4 exact)   */}
-          {/* ========================================================== */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="p-6 rounded-2xl bg-[#231611] border border-[#38210F] space-y-5 text-left">
-              
-              <div className="flex items-center justify-between border-b border-[#38210F] pb-3 text-xs font-bold font-mono text-[#A8907E] uppercase tracking-wider">
-                <span>Seus NFTs</span>
-                <span>Subtotal</span>
-              </div>
-
-              {/* Items List matching Figma Page 4 exact */}
-              <div className="divide-y divide-[#38210F] max-h-56 overflow-y-auto pr-1 text-xs">
-                {items.map((item) => {
-                  const lineTotal = (parseFloat(item.nft.priceEth) * item.quantity).toFixed(2);
-                  return (
-                    <div key={item.nftId} className="py-2.5 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <img
-                          src={item.nft.image}
-                          alt={item.nft.title}
-                          referrerPolicy="no-referrer"
-                          className="w-10 h-10 rounded-lg object-cover bg-[#130C0A] border border-[#38210F] shrink-0"
-                        />
-                        <div className="min-w-0 font-mono">
-                          <p className="font-bold text-[#FDF2DA] truncate">
-                            {item.nft.title} <span className="text-[#A8907E] font-normal">(x {item.quantity})</span>
-                          </p>
-                          <p className="text-[10px] text-[#A8907E]">
-                            ID do token: #{item.nft.tokenId}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="font-mono font-bold text-[#FDF2DA] tabular-nums shrink-0">
-                        {lineTotal} ETH
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <p className="text-[11px] font-mono text-[#D1894B] hover:underline cursor-pointer">
-                Tem um código promocional? Aplique aqui
-              </p>
-
-              {/* Financials matching Figma exact */}
-              <div className="pt-2 border-t border-[#38210F] space-y-2 text-xs font-mono">
-                <div className="flex justify-between text-[#A8907E]">
-                  <span>Subtotal</span>
-                  <span className="font-mono text-[#FDF2DA] font-bold tabular-nums">
-                    {formatEthDisplay(quote?.subtotalEth || '26.83')} ETH
-                  </span>
-                </div>
-
-                <div className="flex justify-between text-[#A8907E]">
-                  <span>Desconto do lançamento</span>
-                  <span className="font-mono text-[#A8907E] tabular-nums">(-) 00.00</span>
-                </div>
-
-                <div className="flex justify-between text-[#A8907E]">
-                  <div>
-                    <span>Taxa de rede</span>
-                    <span className="text-[10px] text-[#7A6352] block">Taxa estimada</span>
+          <div className="min-w-0 flex-1">
+            <h2 className="h-6 text-[17px] font-bold leading-6">Seus NFTs</h2>
+            <div className="mt-[3px] flex h-[30px] items-center justify-between border-b border-brand/40 text-[16px] font-bold">
+              <span>NFTs</span>
+              <span>Subtotal</span>
+            </div>
+            <div className="mt-[10px] space-y-4">
+              {items.map((item) => (
+                <div key={item.nftId} className="relative h-[66px] bg-card">
+                  <img src={item.nft.image} alt={item.nft.title} className="absolute left-0 top-0 h-[66px] w-[70px] rounded-md object-cover" />
+                  <div className="absolute left-[82px] top-[10px]">
+                    <p className="text-[16px] font-bold leading-6">{item.nft.title}</p>
+                    <p className="text-[14px] leading-5 text-sand">ID do token: #{item.nft.tokenId.replace(/^#/, '')}</p>
                   </div>
-                  <span className="font-mono text-[#FDF2DA] font-bold tabular-nums">
-                    {quote?.gasFeeEth || '0.016'} ETH
+                  <span className="absolute left-[245px] top-[18px] text-[14px] text-sand">(x {item.quantity})</span>
+                  <span className="absolute right-[11px] top-[16px] text-[18px] font-bold leading-6 text-brand">
+                    {(parseFloat(item.nft.priceEth) * item.quantity).toFixed(2)} ETH
                   </span>
                 </div>
-
-                <div className="pt-3 border-t border-[#38210F] flex justify-between items-baseline">
-                  <span className="text-sm font-bold text-[#FDF2DA]">Total</span>
-                  <span className="font-mono font-extrabold text-lg text-[#D1894B] tabular-nums">
-                    {quote?.totalEth || '26.846'} ETH
-                  </span>
-                </div>
-              </div>
-
-              {/* Carteira e rede matching Figma Page 4 */}
-              <div className="pt-3 border-t border-[#38210F] space-y-2.5">
-                <h3 className="text-xs font-bold font-mono text-[#FDF2DA] uppercase tracking-wider">
-                  Carteira e rede
-                </h3>
-
-                <div className="space-y-2 text-xs font-mono">
-                  <label className="flex items-center gap-2.5 p-2 rounded-lg bg-[#130C0A] border border-[#38210F] cursor-pointer">
-                    <input
-                      type="radio"
-                      name="provider"
-                      checked={selectedProvider === 'WalletConnect'}
-                      onChange={() => setSelectedProvider('WalletConnect')}
-                      className="text-[#D1894B] focus:ring-[#D1894B]"
-                    />
-                    <span className="font-mono text-[11px] text-[#A8907E]">
-                      METAMASK • WALLETCONNECT • COINBASE
-                    </span>
-                  </label>
-
-                  <label className="flex items-center gap-2.5 p-2 rounded-lg bg-[#130C0A] border border-[#38210F] cursor-pointer">
-                    <input
-                      type="radio"
-                      name="provider"
-                      checked={selectedProvider === 'MetaMask'}
-                      onChange={() => setSelectedProvider('MetaMask')}
-                      className="text-[#D1894B] focus:ring-[#D1894B]"
-                    />
-                    <span className="font-semibold text-[#FDF2DA]">MetaMask</span>
-                  </label>
-
-                  <label className="flex items-center gap-2.5 p-2 rounded-lg bg-[#130C0A] border border-[#38210F] cursor-pointer">
-                    <input
-                      type="radio"
-                      name="provider"
-                      checked={selectedProvider === 'Coinbase'}
-                      onChange={() => setSelectedProvider('Coinbase')}
-                      className="text-[#D1894B] focus:ring-[#D1894B]"
-                    />
-                    <span className="font-semibold text-[#FDF2DA]">Coinbase Wallet</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Confirmar compra Button matching Figma Page 4 */}
-              <button
-                type="submit"
-                disabled={isCreatingOrder}
-                className="w-full py-3.5 bg-[#D1894B] hover:bg-[#E0985C] disabled:opacity-50 text-[#130C0A] font-bold font-mono text-xs rounded-md transition-colors uppercase tracking-wider shadow-lg shadow-[#D1894B]/20"
-              >
-                {isCreatingOrder ? 'Processando transação...' : 'Confirmar compra'}
-              </button>
-
+              ))}
             </div>
+
+            <p className="mt-[19px] text-center text-[14px] leading-6">
+              Tem um código promocional? <button type="button" onClick={onBackToCart} className="text-brand-hi">Aplique aqui</button>
+            </p>
+            <div className="mt-[11px] flex h-8 items-center justify-between text-[15px]">
+              <span>Subtotal</span>
+              <span className="text-[18px]">{subtotal} ETH</span>
+            </div>
+            <div className="flex h-8 items-center justify-between text-[15px]">
+              <span>Desconto do lançamento</span>
+              <span>{discount}</span>
+            </div>
+            <div className="flex h-8 items-center justify-between text-[15px]">
+              <span>Taxa de rede</span>
+              <span className="text-[18px]">{fee} ETH</span>
+            </div>
+            <p className="text-center text-[12px] leading-4 text-brand-hi">Taxa estimada</p>
+            <div className="mt-[8px] border-t border-brand/40" />
+            <div className="mx-[42px] mt-[8px] flex h-8 items-center justify-between text-[16px] font-bold">
+              <span>Total</span>
+              <span className="text-[18px] text-brand">{total} ETH</span>
+            </div>
+
+            <h3 className="mt-[14px] text-center text-[17px] font-bold leading-6">Carteira e rede</h3>
+            <div className="mt-[10px] space-y-[15px]">
+              {providerRows.map((p, i) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setProvider(p.id)}
+                  className={`flex h-[46px] w-full items-center gap-[12px] border px-[14px] text-left ${
+                    provider === p.id ? 'border-cream/60' : 'border-line'
+                  }`}
+                >
+                  <Radio checked={provider === p.id} />
+                  {i === 0 && <span className="text-[9px] font-bold text-brand-hi">METAMASK • WALLETCONNECT • COINBASE</span>}
+                  {i === 1 && <span className="text-[15px]">MetaMask</span>}
+                  {i === 2 && (
+                    <>
+                      <WalletIcon className="h-5 w-5 text-brand" />
+                      <span className="text-[15px]">Coinbase Wallet</span>
+                    </>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isCreatingOrder || items.length === 0}
+              className="mt-[24px] h-[44px] w-full rounded-md bg-brand text-[15px] font-bold text-ink disabled:opacity-60"
+            >
+              {isCreatingOrder ? 'Processando...' : 'Confirmar compra'}
+            </button>
           </div>
-
         </form>
-
       </div>
-    </div>
+
+      {/* ================= Mobile (Figma page 13) ================= */}
+      <div className="min-h-screen px-7 pb-10 md:hidden">
+        <div className="relative flex h-[88px] items-center justify-center">
+          <button
+            onClick={onBackToCart}
+            aria-label="Voltar"
+            className="absolute left-0 top-[30px] flex h-9 w-9 items-center justify-center rounded-full bg-band text-brand"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-[20px] font-bold">Pagamento com carteira</h1>
+        </div>
+        {banner}
+
+        <div className="mt-2 flex items-center justify-between">
+          <h2 className="text-[16px] font-bold">Carteira conectada</h2>
+          <button className="text-[14px] font-bold text-brand">Trocar carteira</button>
+        </div>
+        <div className="mt-3 space-y-[19px]">
+          {wallets.map((w) => {
+            const selected = walletAddress.toLowerCase() === w.address.toLowerCase();
+            return (
+              <button
+                key={w.id}
+                onClick={() => {
+                  setWalletAddress(w.address);
+                  setNetwork(w.network);
+                }}
+                className="relative flex h-[94px] w-full items-start gap-3 rounded-2xl bg-card px-[27px] pt-[14px] text-left"
+              >
+                <span className="mt-1"><Radio checked={selected} /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[16px] font-bold leading-6">{w.label}</span>
+                  <span className="block text-[14px] leading-5 text-sand">
+                    {w.isSecondary && user?.ensName ? user.ensName : short(w.address)}
+                  </span>
+                  <span className="block text-[14px] leading-5 text-sand">
+                    {w.isPrimary ? `Rede principal ${w.network}` : `Rede ${w.network}`}
+                  </span>
+                </span>
+                <MoreVertical className="absolute right-[18px] top-[34px] h-5 w-5 text-brand" />
+              </button>
+            );
+          })}
+        </div>
+
+        <h2 className="mt-6 text-[16px] font-bold">Carteira e rede</h2>
+        <div className="mt-3 space-y-[17px]">
+          {providerRows.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setProvider(p.id)}
+              className="flex h-16 w-full items-center gap-4 rounded-2xl bg-card px-[22px] text-left"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-band text-[12px] font-bold text-brand">
+                {p.letter ?? <WalletIcon className="h-5 w-5" />}
+              </span>
+              <span className="flex-1 text-[15px]">{p.label}</span>
+              <Radio checked={provider === p.id} />
+            </button>
+          ))}
+        </div>
+
+        <p className="mt-5 text-right text-[15px]">
+          <span className="font-bold text-sand">Total:</span>{' '}
+          <span className="text-[18px] font-bold text-brand">{total} ETH</span>
+        </p>
+        <button
+          onClick={() => submit()}
+          disabled={isCreatingOrder || items.length === 0}
+          className="bg-brand-grad mt-6 h-[60px] w-full rounded-[30px] text-[16px] font-bold text-ink disabled:opacity-60"
+        >
+          {isCreatingOrder ? 'Processando...' : 'Confirmar compra'}
+        </button>
+      </div>
+    </>
   );
 }

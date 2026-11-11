@@ -7,7 +7,7 @@ import {
 } from './db';
 import { NFT, CartItem, CartQuote, Order, Wallet } from '../types';
 import { addEth, formatEth, multiplyEth, parseEth, subtractEth, formatUsd } from '../lib/eth';
-import { emitMockSocketEvent } from '../lib/socket';
+import { broadcast } from './socketServer';
 
 // Helper to simulate configured latency and forced errors
 async function handleSimulationCheck(endpointName: string): Promise<Response | null> {
@@ -544,7 +544,7 @@ export const handlers = [
 
     if (couponCode) {
       const normalizedCoupon = couponCode.trim().toUpperCase();
-      if (normalizedCoupon === 'AETHERIA10') {
+      if (normalizedCoupon === 'KURIO10') {
         discountPercent = 10;
         couponValid = true;
       } else if (normalizedCoupon === 'CRYPTO25') {
@@ -679,7 +679,7 @@ export const handlers = [
 
     const discountPercent = couponCode?.trim().toUpperCase() === 'CRYPTO25'
       ? 25
-      : couponCode?.trim().toUpperCase() === 'AETHERIA10'
+      : couponCode?.trim().toUpperCase() === 'KURIO10'
       ? 10
       : 0;
 
@@ -717,7 +717,7 @@ export const handlers = [
         liveNft.availableCount = Math.max(0, liveNft.availableCount - item.quantity);
         liveNft.version += 1;
         // Emit Socket.IO nft.updated event
-        emitMockSocketEvent('nft.updated', {
+        broadcast('nft.updated', {
           nftId: liveNft.id,
           priceEth: liveNft.priceEth,
           priceUsd: liveNft.priceUsd,
@@ -736,14 +736,15 @@ export const handlers = [
     saveDatabase(db);
 
     // Emit order.updated event over Socket.IO
+    const ownerId = db.currentUserId ?? undefined;
     setTimeout(() => {
-      emitMockSocketEvent('order.updated', {
+      broadcast('order.updated', {
         orderId: newOrder.id,
         status: newOrder.status,
         transactionHash: newOrder.transactionHash,
         version: newOrder.version,
         timestamp: new Date().toISOString(),
-      });
+      }, ownerId);
     }, 100);
 
     return HttpResponse.json(newOrder, { status: 201 });

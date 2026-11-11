@@ -1,10 +1,8 @@
 import React from 'react';
-import {
-  X,
-  Mail,
-} from 'lucide-react';
+import { X, Mail } from 'lucide-react';
 import { useOrderDetail } from '../hooks/useOrders';
 import { Skeleton } from './ui/Skeleton';
+import { IMG_OCULOS, IMG_CHAPEU, IMG_TERNO } from '../assets/images';
 
 interface OrderConfirmationPageProps {
   orderId: string;
@@ -13,177 +11,105 @@ interface OrderConfirmationPageProps {
   onToast: (toast: { type: 'success' | 'error' | 'info'; title: string; description?: string }) => void;
 }
 
-export function OrderConfirmationPage({
-  orderId,
-  onGoToMarketplace,
-  onToast,
-}: OrderConfirmationPageProps) {
+const FALLBACK_ITEMS = [
+  { nftId: 'emerald-ape-042', title: 'Emerald Ape #042', image: IMG_OCULOS, quantity: 2, unitPriceEth: '1.19', totalEth: '2.38', tokenId: '#0042' },
+  { nftId: 'violet-nomad-314', title: 'Violet Nomad #314', image: IMG_CHAPEU, quantity: 6, unitPriceEth: '1.39', totalEth: '8.34', tokenId: '#0314' },
+  { nftId: 'ivory-baron-088', title: 'Ivory Baron #088', image: IMG_TERNO, quantity: 9, unitPriceEth: '1.79', totalEth: '16.11', tokenId: '#0088' },
+];
+
+export function OrderConfirmationPage({ orderId, onGoToMarketplace, onGoToProfile }: OrderConfirmationPageProps) {
   const { data: order, isLoading } = useOrderDetail(orderId);
 
   if (isLoading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 space-y-6 bg-[#130C0A]">
-        <Skeleton className="h-64 w-full rounded-2xl" />
+      <div className="mx-auto max-w-[578px] px-4 py-24">
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
 
-  const items = order?.items || [
-    {
-      nftId: 'emerald-ape-042',
-      title: 'Emerald Ape #042',
-      image: '/src/assets/images/nft_cyber_valkyrie_1794341377253.jpg',
-      quantity: 2,
-      unitPriceEth: '1.19',
-      totalEth: '2.38',
-      tokenId: '#0042',
-    },
-    {
-      nftId: 'violet-nomad-314',
-      title: 'Violet Nomad #314',
-      image: '/src/assets/images/nft_cyber_valkyrie_1794341377253.jpg',
-      quantity: 6,
-      unitPriceEth: '1.39',
-      totalEth: '8.34',
-      tokenId: '#0314',
-    },
-    {
-      nftId: 'ivory-baron-088',
-      title: 'Ivory Baron #088',
-      image: '/src/assets/images/nft_quantum_samurai_1794341379021.jpg',
-      quantity: 9,
-      unitPriceEth: '1.79',
-      totalEth: '16.11',
-      tokenId: '#0088',
-    },
+  const items = order?.items || FALLBACK_ITEMS;
+  const hash = order?.transactionHash ? `${order.transactionHash.slice(0, 6)}…${order.transactionHash.slice(-4)}` : '0xA91F…E82C';
+  const date = order?.createdAt
+    ? new Date(order.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '')
+    : '29 Jul, 2026';
+  const total = order?.totalEth || '26.846';
+
+  const cells = [
+    ['ID da transação', hash],
+    ['Data', date],
+    ['Total', `${total} ETH`],
+    ['Carteira', order?.walletProvider || 'MetaMask'],
   ];
 
   return (
-    <div className="bg-[#130C0A] text-[#FDF2DA] min-h-[85vh] flex items-center justify-center p-4 sm:p-6 font-mono">
-      
-      {/* Modal Card matching Figma Page 5 exact */}
-      <div className="relative w-full max-w-xl bg-[#231611] border border-[#38210F] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 text-left">
-        
-        {/* Close Button top right */}
+    <div className="px-4 pb-16 pt-6 md:pt-[98px]">
+      <div className="relative mx-auto w-full max-w-[578px] bg-card pb-[58px] pt-[22px] md:mx-auto">
+        <div className="absolute inset-x-0 bottom-0 h-[10px] bg-brand" />
         <button
           onClick={onGoToMarketplace}
           aria-label="Fechar"
-          className="absolute top-5 right-5 text-[#A8907E] hover:text-[#FDF2DA] p-1"
+          className="absolute right-[23px] top-[25px] text-brand"
         >
-          <X className="w-5 h-5" />
+          <X className="h-5 w-5" strokeWidth={1.5} />
         </button>
 
-        {/* Envelope Icon with THANK YOU seal matching Figma */}
-        <div className="text-center space-y-3 pt-2">
-          <div className="w-14 h-14 mx-auto rounded-xl bg-[#D1894B]/15 border border-[#D1894B] flex flex-col items-center justify-center text-[#D1894B] shadow-lg shadow-[#D1894B]/10">
-            <Mail className="w-6 h-6 mb-0.5" />
-            <span className="text-[7px] font-mono font-black tracking-widest leading-none">THANK YOU</span>
-          </div>
+        <div className="mx-auto flex h-20 w-[66px] flex-col items-center justify-center text-brand">
+          <Mail className="h-14 w-14" strokeWidth={1} />
+        </div>
+        <h1 className="mt-[15px] text-center text-[16px] font-bold leading-5 text-sand">Seus NFTs agora estão na sua carteira</h1>
 
-          <h1 className="text-lg sm:text-xl font-bold font-mono text-[#FDF2DA] tracking-tight">
-            Seus NFTs agora estão na sua carteira
-          </h1>
+        <div className="mt-[19px] grid h-[66px] grid-cols-4 divide-x divide-brand/50 border-y border-brand/50 text-[14px] leading-5 text-sand">
+          {cells.map(([label, value], i) => (
+            <div key={label} className="flex min-w-0 flex-col items-center justify-center px-1 text-center">
+              <span className={i === 0 || i === 3 ? 'font-bold' : ''}>{label}</span>
+              <span className="max-w-full truncate">{value}</span>
+            </div>
+          ))}
         </div>
 
-        {/* Meta Bar Strip matching Figma Page 5 */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl bg-[#130C0A] border border-[#38210F] text-[11px] font-mono">
-          <div>
-            <span className="text-[#A8907E] block">ID da transação</span>
-            <span className="font-mono font-bold text-[#FDF2DA] truncate block">
-              {order?.transactionHash ? `${order.transactionHash.slice(0, 6)}…${order.transactionHash.slice(-4)}` : '0xA91F…E82C'}
-            </span>
-          </div>
-          <div>
-            <span className="text-[#A8907E] block">Data</span>
-            <span className="font-mono text-[#FDF2DA]">
-              {order?.createdAt ? new Date(order.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : '29 Jul, 2026'}
-            </span>
-          </div>
-          <div>
-            <span className="text-[#A8907E] block">Total</span>
-            <span className="font-mono font-bold text-[#D1894B]">
-              {order?.totalEth || '26.846'} ETH
-            </span>
-          </div>
-          <div>
-            <span className="text-[#A8907E] block">Carteira</span>
-            <span className="font-semibold text-[#FDF2DA]">
-              {order?.walletProvider || order?.network || 'MetaMask'}
-            </span>
-          </div>
-        </div>
-
-        {/* Detalhes da transação matching Figma */}
-        <div className="space-y-3 pt-2 font-mono">
-          <h2 className="text-xs font-bold text-[#A8907E] uppercase tracking-wider">
-            Detalhes da transação
-          </h2>
-
-          <div className="flex items-center justify-between text-[11px] font-bold text-[#7A6352] uppercase border-b border-[#38210F] pb-1.5">
+        <div className="px-4 md:px-[44px]">
+          <h2 className="mt-[18px] text-[14px] font-bold leading-[22px]">Detalhes da transação</h2>
+          <div className="relative mt-[1px] flex h-[35px] items-center border-b border-brand/40 text-[16px] font-bold">
             <span>NFTs</span>
-            <span>Edições</span>
-            <span>Subtotal</span>
+            <span className="absolute left-1/2 -translate-x-1/2">Edições</span>
+            <span className="ml-auto">Subtotal</span>
           </div>
 
-          <div className="divide-y divide-[#38210F] text-xs">
+          <div className="mt-[13px] space-y-[14px]">
             {items.map((it, idx) => (
-              <div key={idx} className="py-2.5 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <img
-                    src={it.image}
-                    alt={it.title}
-                    referrerPolicy="no-referrer"
-                    className="w-9 h-9 rounded-md object-cover bg-[#130C0A] shrink-0"
-                  />
-                  <div className="min-w-0">
-                    <p className="font-bold text-[#FDF2DA] truncate">{it.title}</p>
-                    <p className="text-[10px] text-[#A8907E] font-mono">
-                      ID do token: #{it.tokenId?.replace('#', '') || '0042'}
-                    </p>
-                  </div>
+              <div key={idx} className="relative flex h-[70px] items-center">
+                <img src={it.image} alt={it.title} className="h-[70px] w-[70px] rounded-md object-cover" />
+                <div className="ml-[16px] min-w-0">
+                  <p className="truncate text-[16px] font-bold leading-6">{it.title}</p>
+                  <p className="text-[13px] leading-5 text-sand">ID do token: #{it.tokenId?.replace('#', '') || '0042'}</p>
                 </div>
-
-                <span className="font-mono text-[#A8907E]">(x {it.quantity})</span>
-
-                <span className="font-mono font-bold text-[#FDF2DA] tabular-nums">
-                  {it.totalEth} ETH
-                </span>
+                <span className="absolute left-1/2 -translate-x-1/2 text-[14px] text-sand">(x {it.quantity})</span>
+                <span className="ml-auto pr-3 text-[18px] font-bold text-brand">{it.totalEth} ETH</span>
               </div>
             ))}
           </div>
 
-          {/* Taxa de rede & Total */}
-          <div className="pt-3 border-t border-[#38210F] space-y-1.5 text-xs">
-            <div className="flex justify-between text-[#A8907E]">
-              <span>Taxa de rede</span>
-              <span className="font-mono tabular-nums">{order?.gasFeeEth || '0.016'} ETH</span>
-            </div>
-            <div className="flex justify-between text-sm font-bold text-[#FDF2DA] pt-1">
-              <span>Total</span>
-              <span className="font-mono text-[#D1894B] tabular-nums">{order?.totalEth || '26.846'} ETH</span>
-            </div>
+          <div className="mt-[2px] flex justify-between pl-[40%] text-[14px] leading-[22px] text-sand">
+            <span>Taxa de rede</span>
+            <span>{order?.gasFeeEth || '0.016'} ETH</span>
           </div>
-        </div>
+          <div className="mt-[8px] flex h-[35px] justify-between border-b border-brand/40 pl-[40%] text-[16px] font-bold leading-[22px]">
+            <span>Total</span>
+            <span>{total} ETH</span>
+          </div>
 
-        {/* Confirmation note text */}
-        <p className="text-[11px] text-[#A8907E] leading-relaxed pt-2">
-          Transação confirmada na Ethereum. A propriedade foi transferida para sua carteira conectada e registrada na rede.
-        </p>
-
-        {/* Ver no Etherscan Button matching Figma Page 5 */}
-        <div className="pt-2">
+          <p className="mx-auto mt-3 max-w-[460px] text-center text-[14px] leading-[22px] text-sand">
+            Transação confirmada na Ethereum. A propriedade foi transferida para sua carteira conectada e registrada na rede.
+          </p>
           <button
-            onClick={() => {
-              onToast({ type: 'info', title: 'Explorador', description: 'Abrindo visualização na Etherscan.' });
-            }}
-            className="w-full py-3 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono text-xs uppercase tracking-wider rounded-md transition-colors shadow-lg shadow-[#D1894B]/20"
+            onClick={onGoToProfile}
+            className="mx-auto mt-5 block h-12 w-[186px] rounded-md bg-brand text-[16px] font-bold text-ink"
           >
             Ver no Etherscan
           </button>
         </div>
-
       </div>
-
     </div>
   );
 }

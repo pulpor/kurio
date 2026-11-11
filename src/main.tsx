@@ -1,15 +1,8 @@
-import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
+﻿import { createRoot } from 'react-dom/client';
 import './index.css';
 import { initMocks } from './mocks/browser';
 
-async function bootstrap() {
-  try {
-    await initMocks();
-  } catch (err) {
-    console.warn('MSW worker init deferred or skipped:', err);
-  }
-  createRoot(document.getElementById('root')!).render(<App />);
-}
-
-bootstrap();
+// socket.io-client captures the global WebSocket on import, so App loads only after MSW patches it.
+initMocks()
+  .then(() => import('./App'))
+  .then(({ default: App }) => createRoot(document.getElementById('root')!).render(<App />));

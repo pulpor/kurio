@@ -1,6 +1,0 @@
-{
-  "name": "Aetheria NFT Marketplace",
-  "description": "Desafio Frontend: Marketplace de NFTs com TanStack Router, TanStack Query, Axios, MSW e Socket.IO em tempo real.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

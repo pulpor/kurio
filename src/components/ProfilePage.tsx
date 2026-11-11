@@ -1,19 +1,9 @@
 import React, { useState } from 'react';
-import {
-  User,
-  Wallet,
-  Activity,
-  Heart,
-  Tag,
-  Download,
-  HelpCircle,
-  LogOut,
-  CheckCircle,
-  AlertCircle,
-} from 'lucide-react';
+import { CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { useOrders } from '../hooks/useOrders';
+import { AccountSidebar, AccountMenu, AField, accInput, EnsField } from './AccountUI';
 
 interface ProfilePageProps {
   onNavigateToWallets: () => void;
@@ -21,26 +11,41 @@ interface ProfilePageProps {
   onToast: (toast: { type: 'success' | 'error' | 'info'; title: string; description?: string }) => void;
 }
 
-export function ProfilePage({
-  onNavigateToWallets,
-  onGoToOrderReceipt,
-  onToast,
-}: ProfilePageProps) {
+function PasswordInput({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      <input
+        type={show ? 'text' : 'password'}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={label}
+        className={`${accInput} pr-11`}
+      />
+      <button
+        type="button"
+        onClick={() => setShow((s) => !s)}
+        aria-label={show ? 'Ocultar senha' : 'Mostrar senha'}
+        className="absolute right-3 top-[10px] text-brand"
+      >
+        {show ? <Eye className="h-5 w-5" strokeWidth={1.5} /> : <EyeOff className="h-5 w-5" strokeWidth={1.5} />}
+      </button>
+    </div>
+  );
+}
+
+export function ProfilePage({ onNavigateToWallets, onGoToOrderReceipt, onToast }: ProfilePageProps) {
   const { user, logout } = useAuth();
   const { updateProfile, isUpdating, changePassword, isChangingPassword } = useProfile();
   const { orders } = useOrders();
 
-  // Active subtab in profile sidebar
-  const [activeMenu, setActiveMenu] = useState<'dados' | 'carteiras' | 'atividade' | 'favoritos'>('dados');
-
-  // Form fields matching Figma Page 8 exact
+  const [activeMenu, setActiveMenu] = useState<AccountMenu>('dados');
   const [displayName, setDisplayName] = useState(user?.displayName || user?.name || 'Nova Sato');
   const [username, setUsername] = useState(user?.username || 'novasato');
   const [email, setEmail] = useState(user?.email || 'contato@email.com');
   const [ensName, setEnsName] = useState(user?.ensName || 'nova.kurio.eth');
   const [walletNickname, setWalletNickname] = useState('Principal Vault');
 
-  // Password fields
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -49,12 +54,10 @@ export function ProfilePage({
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(false);
     try {
-      await updateProfile({
-        name: displayName,
-        username,
-        email,
-      });
+      await updateProfile({ name: displayName, username, email });
 
       if (newPassword) {
         if (newPassword !== confirmNewPassword) {
@@ -68,296 +71,118 @@ export function ProfilePage({
         setConfirmNewPassword('');
       }
 
-      onToast({
-        type: 'success',
-        title: 'Perfil Salvo!',
-        description: 'Informações do colecionador atualizadas com sucesso.',
-      });
+      onToast({ type: 'success', title: 'Perfil salvo', description: 'Informações do colecionador atualizadas com sucesso.' });
     } catch (err: any) {
-      onToast({
-        type: 'error',
-        title: 'Erro ao salvar',
-        description: err?.response?.data?.error || 'Tente novamente.',
-      });
+      onToast({ type: 'error', title: 'Erro ao salvar', description: err?.response?.data?.error || 'Tente novamente.' });
     }
   };
 
-  const menuItems = [
-    { id: 'dados', label: 'Dados do perfil', icon: User },
-    { id: 'carteiras', label: 'Carteiras', icon: Wallet, action: onNavigateToWallets },
-    { id: 'atividade', label: 'Atividade', icon: Activity },
-    { id: 'favoritos', label: 'Lista de interesse', icon: Heart },
-    { id: 'ofertas', label: 'Ofertas', icon: Tag },
-    { id: 'baixados', label: 'Arquivos baixados', icon: Download },
-    { id: 'suporte', label: 'Suporte', icon: HelpCircle },
-  ];
+  const select = (id: AccountMenu) => {
+    if (id === 'carteiras') onNavigateToWallets();
+    else setActiveMenu(id);
+  };
 
   return (
-    <div className="bg-[#130C0A] text-[#FDF2DA] py-8 lg:py-12 min-h-[85vh] font-mono">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* ========================================================== */}
-          {/* LEFT SIDEBAR: Meu perfil matching Figma Page 8 exact       */}
-          {/* ========================================================== */}
-          <aside className="lg:col-span-3 space-y-4 bg-[#231611] border border-[#38210F] rounded-2xl p-5 text-xs text-left">
-            <h2 className="text-sm font-bold font-mono text-[#FDF2DA] tracking-wide mb-3">
-              Meu perfil
-            </h2>
+    <div className="mx-auto max-w-[1200px] px-4 pb-16 pt-6 md:flex md:items-start md:gap-[28px] md:px-4 md:pb-24 md:pt-[33px] xl:px-0">
+      <AccountSidebar active={activeMenu} onSelect={select} onLogout={() => logout()} />
 
-            <div className="space-y-1">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeMenu === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      if (item.action) {
-                        item.action();
-                      } else {
-                        setActiveMenu(item.id as any);
-                      }
-                    }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors font-mono ${
-                      isActive
-                        ? 'text-[#D1894B] bg-[#D1894B]/10 font-bold'
-                        : 'text-[#A8907E] hover:bg-[#38210F]/40 hover:text-[#FDF2DA]'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 shrink-0" />
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
+      <main className="mt-6 min-w-0 flex-1 md:-mt-[3px]">
+        <h1 className="text-[16px] font-bold leading-6">Perfil do colecionador</h1>
 
-              <div className="border-t border-[#38210F] my-2" />
+        {passwordSuccess && (
+          <div className="mt-3 flex items-center gap-2 border border-brand p-2 text-[13px]">
+            <CheckCircle className="h-4 w-4 text-brand" /> Senha atualizada com sucesso!
+          </div>
+        )}
+        {passwordError && (
+          <div className="mt-3 flex items-center gap-2 border border-brand p-2 text-[13px]">
+            <AlertCircle className="h-4 w-4 text-brand" /> {passwordError}
+          </div>
+        )}
 
-              <button
-                onClick={() => logout()}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-400 hover:bg-rose-950/20 transition-colors font-mono"
-              >
-                <LogOut className="w-4 h-4 shrink-0" />
-                <span>Sair</span>
-              </button>
-            </div>
-          </aside>
-
-          {/* ========================================================== */}
-          {/* RIGHT CONTENT: Perfil do colecionador matching Figma       */}
-          {/* ========================================================== */}
-          <main className="lg:col-span-9 bg-[#231611] border border-[#38210F] rounded-2xl p-6 sm:p-8 space-y-8 text-left">
-            
-            <h1 className="text-base font-bold font-mono text-[#FDF2DA] tracking-wide">
-              Perfil do colecionador
-            </h1>
-
-            {passwordSuccess && (
-              <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-800 text-xs text-emerald-300 flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
-                Senha atualizada com sucesso!
-              </div>
-            )}
-
-            {passwordError && (
-              <div className="p-3 rounded-lg bg-rose-950/40 border border-rose-800 text-xs text-rose-300 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-400" />
-                {passwordError}
-              </div>
-            )}
-
-            <form onSubmit={handleSaveProfile} className="space-y-6 text-xs font-mono">
-              
-              {/* Form Grid matching Figma Page 8 exact */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                
-                {/* Nome de exibição* */}
-                <div className="space-y-1.5">
-                  <label className="text-[#A8907E] font-medium block">
-                    Nome de exibição*
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
-                  />
-                </div>
-
-                {/* Nome de usuário* */}
-                <div className="space-y-1.5">
-                  <label className="text-[#A8907E] font-medium block">
-                    Nome de usuário*
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] font-mono outline-none focus:border-[#D1894B]"
-                  />
-                </div>
-
-                {/* E-mail* */}
-                <div className="space-y-1.5">
-                  <label className="text-[#A8907E] font-medium block">
-                    E-mail*
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
-                  />
-                </div>
-
-                {/* Nome ENS * */}
-                <div className="space-y-1.5">
-                  <label className="text-[#A8907E] font-medium block">
-                    Nome ENS *
-                  </label>
-                  <div className="flex">
-                    <input
-                      type="text"
-                      value={ensName.replace('.eth', '')}
-                      onChange={(e) => setEnsName(e.target.value + '.eth')}
-                      className="flex-1 bg-[#130C0A] border border-r-0 border-[#38210F] rounded-l-md px-3 py-2.5 text-xs text-[#FDF2DA] font-mono outline-none focus:border-[#D1894B]"
-                    />
-                    <span className="bg-[#38210F]/50 border border-[#38210F] rounded-r-md px-3 py-2.5 text-xs text-[#A8907E] font-mono">
-                      .eth
-                    </span>
-                  </div>
-                </div>
-
-                {/* Apelido da carteira* */}
-                <div className="space-y-1.5">
-                  <label className="text-[#A8907E] font-medium block">
-                    Apelido da carteira*
-                  </label>
-                  <input
-                    type="text"
-                    value={walletNickname}
-                    onChange={(e) => setWalletNickname(e.target.value)}
-                    className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
-                  />
-                </div>
-
-                {/* Avatar matching Figma: circle + Alterar & Remover */}
-                <div className="space-y-1.5">
-                  <label className="text-[#A8907E] font-medium block">
-                    Avatar
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=160&q=80'}
-                      alt="Avatar"
-                      referrerPolicy="no-referrer"
-                      className="w-10 h-10 rounded-full object-cover border border-[#D1894B]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => onToast({ type: 'info', title: 'Avatar', description: 'Seletor de foto aberto.' })}
-                      className="px-3.5 py-1.5 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono text-xs rounded-md"
-                    >
-                      Alterar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onToast({ type: 'info', title: 'Avatar', description: 'Avatar restaurado para o padrão.' })}
-                      className="px-3.5 py-1.5 border border-[#38210F] hover:bg-[#38210F]/40 text-[#A8907E] font-mono text-xs rounded-md"
-                    >
-                      Remover
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Section: Alterar senha matching Figma Page 8 exact */}
-              <div className="pt-6 border-t border-[#38210F] space-y-4">
-                <h2 className="text-xs font-bold font-mono text-[#FDF2DA] uppercase tracking-wider">
-                  Alterar senha
-                </h2>
-
-                <div className="space-y-3 max-w-md">
-                  <div className="space-y-1">
-                    <label className="text-[#A8907E] font-medium block">Senha atual</label>
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[#A8907E] font-medium block">Nova senha</label>
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[#A8907E] font-medium block">Confirmar nova senha</label>
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      value={confirmNewPassword}
-                      onChange={(e) => setConfirmNewPassword(e.target.value)}
-                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Salvar Button matching Figma Page 8 */}
-              <div className="pt-2">
+        <form onSubmit={handleSaveProfile}>
+          <div className="mt-[18px] grid gap-x-[28px] gap-y-[30px] md:grid-cols-2">
+            <AField label="Nome de exibição" required>
+              <input required value={displayName} onChange={(e) => setDisplayName(e.target.value)} className={accInput} />
+            </AField>
+            <AField label="Nome de usuário" required>
+              <input required value={username} onChange={(e) => setUsername(e.target.value)} className={accInput} />
+            </AField>
+            <AField label="E-mail" required>
+              <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={accInput} />
+            </AField>
+            <AField label="Nome ENS" required>
+              <EnsField value={ensName.replace('.eth', '')} onChange={(v) => setEnsName(v + '.eth')} />
+            </AField>
+            <AField label="Apelido da carteira" required>
+              <input value={walletNickname} onChange={(e) => setWalletNickname(e.target.value)} className={accInput} />
+            </AField>
+            <AField label="Avatar" gap={14}>
+              <div className="flex items-center gap-[20px]">
+                <img
+                  src={user?.avatar}
+                  alt="Avatar"
+                  className="h-[50px] w-[50px] rounded-full border border-brand object-cover"
+                />
                 <button
-                  type="submit"
-                  disabled={isUpdating || isChangingPassword}
-                  className="px-8 py-2.5 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono text-xs uppercase tracking-wider rounded-md transition-colors shadow-lg shadow-[#D1894B]/20"
+                  type="button"
+                  onClick={() => onToast({ type: 'info', title: 'Avatar', description: 'Seletor de foto aberto.' })}
+                  className="h-9 w-[95px] rounded-md bg-brand text-[14px] font-bold text-ink"
                 >
-                  {isUpdating ? 'Salvando...' : 'Salvar'}
+                  Alterar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onToast({ type: 'info', title: 'Avatar', description: 'Avatar restaurado para o padrão.' })}
+                  className="text-[14px] text-brand-hi"
+                >
+                  Remover
                 </button>
               </div>
+            </AField>
+          </div>
 
-            </form>
+          <h2 className="mt-[34px] text-[16px] font-bold leading-6">Alterar senha</h2>
+          <div className="mt-[16px] space-y-[14px] md:max-w-[417px]">
+            <AField label="Senha atual">
+              <PasswordInput value={currentPassword} onChange={setCurrentPassword} label="Senha atual" />
+            </AField>
+            <AField label="Nova senha">
+              <PasswordInput value={newPassword} onChange={setNewPassword} label="Nova senha" />
+            </AField>
+            <AField label="Confirmar nova senha">
+              <PasswordInput value={confirmNewPassword} onChange={setConfirmNewPassword} label="Confirmar nova senha" />
+            </AField>
+          </div>
 
-            {/* Past orders list */}
-            {orders.length > 0 && (
-              <div className="pt-8 border-t border-[#38210F] space-y-4">
-                <h3 className="text-xs font-bold font-mono text-[#FDF2DA] uppercase tracking-wider">
-                  Histórico de Compras Confirmadas
-                </h3>
-                <div className="space-y-2">
-                  {orders.map((ord) => (
-                    <div
-                      key={ord.id}
-                      onClick={() => onGoToOrderReceipt(ord.id)}
-                      className="p-3 rounded-lg bg-[#130C0A] border border-[#38210F] hover:border-[#D1894B] cursor-pointer flex items-center justify-between text-xs font-mono"
-                    >
-                      <span className="font-mono text-[#D1894B] font-bold">#{ord.id}</span>
-                      <span className="text-[#A8907E]">{(ord.items || []).length} obra(s)</span>
-                      <span className="font-mono font-bold text-[#FDF2DA]">{ord.totalEth} ETH</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+          <button
+            type="submit"
+            disabled={isUpdating || isChangingPassword}
+            className="mt-[40px] h-10 w-[131px] rounded-md bg-brand text-[14px] font-bold text-ink disabled:opacity-60"
+          >
+            {isUpdating ? 'Salvando...' : 'Salvar'}
+          </button>
+        </form>
 
-          </main>
-
-        </div>
-
-      </div>
+        {orders.length > 0 && (
+          <div className="mt-12 border-t border-brand/40 pt-6">
+            <h3 className="text-[16px] font-bold">Histórico de compras</h3>
+            <div className="mt-3 space-y-2">
+              {orders.map((ord) => (
+                <button
+                  key={ord.id}
+                  onClick={() => onGoToOrderReceipt(ord.id)}
+                  className="flex w-full items-center justify-between bg-card p-3 text-left text-[14px]"
+                >
+                  <span className="font-bold text-brand">#{ord.id}</span>
+                  <span className="text-sand">{(ord.items || []).length} obra(s)</span>
+                  <span className="font-bold">{ord.totalEth} ETH</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

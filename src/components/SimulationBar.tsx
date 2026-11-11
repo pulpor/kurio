@@ -18,7 +18,8 @@ import {
   saveDatabase,
 } from '../mocks/db';
 import { NetworkSimulationConfig } from '../types';
-import { emitMockSocketEvent, socket } from '../lib/socket';
+import { socket } from '../lib/socket';
+import { broadcast } from '../mocks/socketServer';
 import { useAuth } from '../hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -77,7 +78,7 @@ export function SimulationBar({ isOpen, onClose, onToast }: SimulationBarProps) 
       saveDatabase(db);
     }
 
-    emitMockSocketEvent('nft.updated', {
+    broadcast('nft.updated', {
       nftId: 'emerald-ape-042',
       priceEth: newPrice,
       priceUsd: Math.round(parseFloat(newPrice) * 3200),
@@ -94,7 +95,7 @@ export function SimulationBar({ isOpen, onClose, onToast }: SimulationBarProps) 
   };
 
   const handleTriggerStaleEvent = () => {
-    emitMockSocketEvent('nft.updated', {
+    broadcast('nft.updated', {
       nftId: 'emerald-ape-042',
       priceEth: '0.100',
       priceUsd: 320,

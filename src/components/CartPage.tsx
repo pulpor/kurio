@@ -1,16 +1,9 @@
 import React, { useState } from 'react';
-import {
-  Trash2,
-  ArrowLeft,
-  AlertTriangle,
-  X,
-  ShoppingBag,
-} from 'lucide-react';
+import { AlertTriangle, ChevronLeft, Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { formatEthDisplay } from '../lib/eth';
 import { Skeleton } from './ui/Skeleton';
-import { INITIAL_NFTS } from '../mocks/db';
-import { NFTCard } from './NFTCard';
+import { useNFTs } from '../hooks/useNFTs';
 
 interface CartPageProps {
   onGoToCheckout: () => void;
@@ -19,308 +12,278 @@ interface CartPageProps {
   onToast: (toast: { type: 'success' | 'error' | 'info'; title: string; description?: string }) => void;
 }
 
-export function CartPage({
-  onGoToCheckout,
-  onContinueShopping,
-  onSelectNft,
-  onToast,
-}: CartPageProps) {
-  const {
-    items,
-    isLoading,
-    quote,
-    updateQuantity,
-    removeFromCart,
-    activeCoupon,
-    applyCoupon,
-    removeCoupon,
-  } = useCart();
+function Circle({ children, filled = true, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { filled?: boolean }) {
+  return (
+    <button
+      {...rest}
+      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full disabled:cursor-default max-md:h-6 max-md:w-6 ${
+        filled ? 'bg-brand text-ink' : 'border border-brand text-brand'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
 
+export function CartPage({ onGoToCheckout, onContinueShopping, onSelectNft, onToast }: CartPageProps) {
+  const { items, isLoading, quote, updateQuantity, removeFromCart, activeCoupon, applyCoupon, removeCoupon } = useCart();
   const [couponInput, setCouponInput] = useState('');
 
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!couponInput.trim()) return;
-
     try {
       await applyCoupon(couponInput.trim());
       setCouponInput('');
-      onToast({
-        type: 'success',
-        title: 'Cupom Aplicado!',
-        description: 'Desconto calculado com sucesso.',
-      });
+      onToast({ type: 'success', title: 'Cupom aplicado', description: 'Desconto calculado com sucesso.' });
     } catch (err: any) {
-      onToast({
-        type: 'error',
-        title: 'Cupom Inválido',
-        description: err?.response?.data?.error || 'Não foi possível validar este cupom.',
-      });
+      onToast({ type: 'error', title: 'Cupom inválido', description: err?.response?.data?.error || 'Não foi possível validar este cupom.' });
     }
   };
 
-  const moreRecommended = INITIAL_NFTS.slice(3, 8);
+  const recommended = (useNFTs({ limit: 8 }).data?.items ?? []).slice(3, 8);
 
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-12 space-y-6 bg-[#130C0A]">
+      <div className="mx-auto max-w-[1200px] space-y-6 px-6 py-12">
         <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-64 w-full rounded-2xl" />
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
 
+  const subtotal = formatEthDisplay(quote?.subtotalEth || '0');
+  const discount = quote && parseFloat(quote.discountEth) > 0 ? `- ${quote.discountEth}` : '(-) 00.00';
+  const fee = quote?.gasFeeEth || '0.016';
+  const total = quote?.totalEth || '0';
+
+  const couponBox = (mobile: boolean) =>
+    activeCoupon ? (
+      <div className="flex h-10 items-center justify-between border border-brand px-3 text-[13px] text-brand max-md:h-[50px] max-md:rounded-full max-md:px-5">
+        <span>{activeCoupon} (ativo)</span>
+        <button onClick={removeCoupon} aria-label="Remover cupom">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    ) : (
+      <form
+        onSubmit={handleApplyCoupon}
+        className={mobile ? 'flex h-[50px] items-center rounded-full border border-brand/30 bg-[#1a100c] pl-5' : 'flex h-10'}
+      >
+        <input
+          value={couponInput}
+          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+          placeholder="Digite o código promocional..."
+          aria-label="Código promocional"
+          className={`min-w-0 flex-1 bg-transparent text-[12px] outline-none ${
+            mobile ? 'text-[13px]' : 'border border-brand/50 px-2'
+          }`}
+        />
+        <button
+          type="submit"
+          className={
+            mobile
+              ? 'bg-brand-grad h-[50px] w-[97px] rounded-full text-[15px] font-bold text-ink'
+              : 'w-[102px] bg-brand text-[15px] font-bold text-ink'
+          }
+        >
+          Aplicar
+        </button>
+      </form>
+    );
+
   return (
-    <div className="bg-[#130C0A] text-[#FDF2DA] py-8 lg:py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        
-        {/* Breadcrumb matching Figma Page 3 exact: Início / Mercado / Carrinho */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-[#A8907E] font-mono">
-          <button onClick={onContinueShopping} className="hover:text-[#FDF2DA]">Início</button>
+    <>
+      {/* ================= Desktop (Figma page 3) ================= */}
+      <div className="mx-auto hidden max-w-[1200px] px-4 md:block xl:px-0">
+        <nav aria-label="Breadcrumb" className="mt-[29px] flex h-6 items-center gap-[9px] text-[15px] font-bold">
+          <button onClick={onContinueShopping}>Início</button>
           <span>/</span>
-          <button onClick={onContinueShopping} className="hover:text-[#FDF2DA]">Mercado</button>
+          <button onClick={onContinueShopping}>Mercado</button>
           <span>/</span>
-          <span className="text-[#FDF2DA] font-semibold">Carrinho</span>
+          <span>Carrinho</span>
         </nav>
 
-        {/* Real-time price change alert banner if Socket.IO changed price */}
         {quote?.priceChangesDetected && (
-          <div className="p-4 rounded-xl bg-amber-950/40 border border-[#D1894B] flex items-center gap-3 text-xs text-[#FDF2DA] font-mono">
-            <AlertTriangle className="w-5 h-5 text-[#D1894B] shrink-0" />
+          <div className="mt-4 flex items-center gap-3 border border-brand p-3 text-[13px]">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-brand" />
             <span>{quote.message || 'Houve uma alteração de preço em tempo real para itens do seu carrinho.'}</span>
           </div>
         )}
 
-        {/* Empty state */}
         {items.length === 0 ? (
-          <div className="py-20 text-center space-y-4 bg-[#231611] border border-[#38210F] rounded-2xl p-8">
-            <ShoppingBag className="w-12 h-12 text-[#7A6352] mx-auto" />
-            <h2 className="text-xl font-bold font-mono text-[#FDF2DA]">Seu carrinho está vazio</h2>
-            <p className="text-xs text-[#A8907E]">Explore coleções e adicione NFTs para continuar.</p>
-            <button
-              onClick={onContinueShopping}
-              className="px-6 py-2.5 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono text-xs rounded-md uppercase tracking-wider"
-            >
-              Explorar Mercado
+          <div className="mt-8 space-y-4 bg-card p-12 text-center">
+            <ShoppingBag className="mx-auto h-12 w-12 text-sand" />
+            <h2 className="text-[18px] font-bold">Seu carrinho está vazio</h2>
+            <p className="text-[14px] text-sand">Explore coleções e adicione NFTs para continuar.</p>
+            <button onClick={onContinueShopping} className="h-10 rounded-md bg-brand px-6 text-[14px] font-bold text-ink">
+              Explorar mercado
             </button>
           </div>
         ) : (
-          /* Main 2-column: Cart Items Table on Left + Resumo da carteira on Right matching Figma Page 3 */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            {/* Left Column: Cart Table */}
-            <div className="lg:col-span-8 space-y-4">
-              
-              {/* Table Header matching Figma Page 3 exact */}
-              <div className="hidden sm:grid grid-cols-12 gap-4 pb-3 border-b border-[#38210F] text-xs font-bold font-mono text-[#A8907E] uppercase tracking-wider">
-                <span className="col-span-5">NFTs</span>
-                <span className="col-span-2 text-center">Preço</span>
-                <span className="col-span-2 text-center">Edições</span>
-                <span className="col-span-2 text-right">Total</span>
-                <span className="col-span-1"></span>
+          <div className="mt-[11px] flex gap-[86px]">
+            <div className="w-[782px] shrink-0">
+              <div className="relative h-[30px] border-b border-brand/40 text-[16px] font-bold">
+                <span className="absolute left-0 top-0">NFTs</span>
+                <span className="absolute left-[311px] top-0">Preço</span>
+                <span className="absolute left-[450px] top-0">Edições</span>
+                <span className="absolute left-[586px] top-0">Total</span>
               </div>
-
-              {/* Rows */}
-              <div className="divide-y divide-[#38210F]">
+              <div className="mt-[13px] space-y-3">
                 {items.map((item) => {
                   const lineTotal = (parseFloat(item.nft.priceEth) * item.quantity).toFixed(2);
                   return (
-                    <div
-                      key={item.nftId}
-                      className="py-4 sm:py-5 flex flex-col sm:grid sm:grid-cols-12 gap-4 items-start sm:items-center text-xs"
-                    >
-                      {/* NFT Info */}
-                      <div className="col-span-5 flex items-center gap-3.5 min-w-0">
-                        <img
-                          src={item.nft.image}
-                          alt={item.nft.title}
-                          referrerPolicy="no-referrer"
-                          className="w-16 h-16 rounded-xl object-cover bg-[#231611] border border-[#38210F] shrink-0"
-                        />
-                        <div className="min-w-0 space-y-0.5">
-                          <h3
-                            onClick={() => onSelectNft(item.nftId)}
-                            className="font-bold font-mono text-[#FDF2DA] hover:text-[#D1894B] cursor-pointer truncate"
-                          >
-                            {item.nft.title}
-                          </h3>
-                          <p className="font-mono text-[11px] text-[#A8907E]">
-                            ID do token: #{item.nft.tokenId}
-                          </p>
-                        </div>
+                    <div key={item.nftId} className="relative h-[70px] bg-card">
+                      <img src={item.nft.image} alt={item.nft.title} className="absolute left-0 top-0 h-[70px] w-[70px] rounded-md object-cover" />
+                      <div className="absolute left-[86px] top-[11px]">
+                        <h3 onClick={() => onSelectNft(item.nftId)} className="cursor-pointer text-[16px] font-bold leading-6">
+                          {item.nft.title}
+                        </h3>
+                        <p className="text-[14px] leading-5 text-sand">ID do token: #{item.nft.tokenId.replace(/^#/, '')}</p>
                       </div>
-
-                      {/* Unit Price */}
-                      <div className="col-span-2 text-left sm:text-center font-mono text-[#FDF2DA] font-semibold">
-                        <span className="sm:hidden text-[#A8907E]">Preço: </span>
-                        {item.nft.priceEth} ETH
-                      </div>
-
-                      {/* Edições / Stepper */}
-                      <div className="col-span-2 flex items-center sm:justify-center">
-                        <div className="flex items-center border border-[#38210F] bg-[#231611] rounded-md overflow-hidden">
-                          <button
-                            disabled={item.quantity <= 1}
-                            onClick={() => updateQuantity({ nftId: item.nftId, quantity: item.quantity - 1 })}
-                            className="px-2.5 py-1 text-[#A8907E] hover:text-[#FDF2DA] font-mono text-sm"
-                          >
-                            -
-                          </button>
-                          <span className="px-2.5 py-1 font-mono text-xs font-bold text-[#FDF2DA] tabular-nums">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => updateQuantity({ nftId: item.nftId, quantity: item.quantity + 1 })}
-                            className="px-2.5 py-1 text-[#A8907E] hover:text-[#FDF2DA] font-mono text-sm"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Line Total */}
-                      <div className="col-span-2 text-left sm:text-right font-mono font-bold text-[#D1894B] text-sm tabular-nums">
-                        <span className="sm:hidden text-[#A8907E] text-xs font-normal">Total: </span>
-                        {lineTotal} ETH
-                      </div>
-
-                      {/* Trash action */}
-                      <div className="col-span-1 flex justify-end">
-                        <button
-                          onClick={() => removeFromCart(item.nftId)}
-                          aria-label={`Remover ${item.nft.title}`}
-                          className="p-1.5 text-[#7A6352] hover:text-rose-400 transition-colors"
+                      <span className="absolute left-[311px] top-[22px] text-[16px] font-bold leading-6 text-brand">{item.nft.priceEth} ETH</span>
+                      <div className="absolute left-[449px] top-[22px] flex items-center gap-[10px]">
+                        <Circle
+                          aria-label="Diminuir"
+                          disabled={item.quantity <= 1}
+                          onClick={() => updateQuantity({ nftId: item.nftId, quantity: item.quantity - 1 })}
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                          <Minus className="h-3 w-3" />
+                        </Circle>
+                        <span className="w-[10px] text-center text-[17px] leading-6">{item.quantity}</span>
+                        <Circle aria-label="Aumentar" onClick={() => updateQuantity({ nftId: item.nftId, quantity: item.quantity + 1 })}>
+                          <Plus className="h-3 w-3" />
+                        </Circle>
                       </div>
+                      <span className="absolute left-[586px] top-[22px] text-[16px] font-bold leading-6 text-brand">{lineTotal} ETH</span>
+                      <button
+                        onClick={() => removeFromCart(item.nftId)}
+                        aria-label={`Remover ${item.nft.title}`}
+                        className="absolute left-[737px] top-[23px] text-brand"
+                      >
+                        <Trash2 className="h-5 w-5" strokeWidth={1.5} />
+                      </button>
                     </div>
                   );
                 })}
               </div>
-
             </div>
 
-            {/* Right Column: Resumo da carteira matching Figma Page 3 exact */}
-            <div className="lg:col-span-4">
-              <div className="p-6 rounded-2xl bg-[#231611] border border-[#38210F] space-y-5 text-left">
-                <h2 className="text-base font-bold font-mono text-[#FDF2DA] tracking-tight">
-                  Resumo da carteira
-                </h2>
+            <div className="min-w-0 flex-1">
+              <h2 className="h-[30px] border-b border-brand/40 text-[18px] font-bold leading-6">Resumo da carteira</h2>
+              <p className="mt-[20px] text-[14px] font-bold leading-6">Código promocional</p>
+              <div className="mt-[3px]">{couponBox(false)}</div>
 
-                {/* Código promocional matching Figma exact */}
-                <div className="space-y-1.5">
-                  <label className="text-xs text-[#A8907E] font-medium block font-mono">
-                    Código promocional
-                  </label>
-                  {activeCoupon ? (
-                    <div className="flex items-center justify-between p-2 rounded-md bg-[#D1894B]/15 border border-[#D1894B] text-xs font-mono text-[#D1894B]">
-                      <span>{activeCoupon} (Ativo)</span>
-                      <button onClick={removeCoupon} className="hover:text-[#FDF2DA]">
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Digite o código promocional..."
-                        value={couponInput}
-                        onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                        className="flex-1 bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2 text-xs text-[#FDF2DA] placeholder-[#7A6352] outline-none focus:border-[#D1894B] font-mono"
-                      />
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono text-xs rounded-md transition-colors uppercase tracking-wider"
-                      >
-                        Aplicar
-                      </button>
-                    </form>
-                  )}
-                </div>
-
-                {/* Financial breakdown matching Figma Page 3 exact */}
-                <div className="pt-2 border-t border-[#38210F] space-y-2.5 text-xs font-mono">
-                  <div className="flex justify-between text-[#A8907E]">
-                    <span>Subtotal</span>
-                    <span className="font-mono text-[#FDF2DA] font-bold tabular-nums">
-                      {formatEthDisplay(quote?.subtotalEth || '26.83')} ETH
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between text-[#A8907E]">
-                    <span>Desconto do lançamento</span>
-                    <span className="font-mono text-[#A8907E] tabular-nums">
-                      {quote && parseFloat(quote.discountEth) > 0 ? `- ${quote.discountEth} ETH` : '(-) 00.00'}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between text-[#A8907E]">
-                    <div>
-                      <span>Taxa de rede</span>
-                      <span className="text-[10px] text-[#7A6352] block">Taxa estimada</span>
-                    </div>
-                    <span className="font-mono text-[#FDF2DA] font-bold tabular-nums">
-                      {quote?.gasFeeEth || '0.016'} ETH
-                    </span>
-                  </div>
-
-                  <div className="pt-3 border-t border-[#38210F] flex justify-between items-baseline">
-                    <span className="text-sm font-bold text-[#FDF2DA]">Total</span>
-                    <span className="font-mono font-extrabold text-lg text-[#D1894B] tabular-nums">
-                      {quote?.totalEth || '26.846'} ETH
-                    </span>
-                  </div>
-                </div>
-
-                {/* Conectar e finalizar button matching Figma */}
-                <div className="space-y-3 pt-2">
-                  <button
-                    onClick={onGoToCheckout}
-                    className="w-full py-3 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono text-xs rounded-md transition-colors uppercase tracking-wider shadow-lg shadow-[#D1894B]/20"
-                  >
-                    Conectar e finalizar
-                  </button>
-
-                  <button
-                    onClick={onContinueShopping}
-                    className="w-full text-center text-xs text-[#A8907E] hover:text-[#FDF2DA] transition-colors font-mono"
-                  >
-                    Continuar explorando
-                  </button>
-                </div>
-
+              <div className="mt-[22px] flex h-8 items-center justify-between text-[15px]">
+                <span>Subtotal</span>
+                <span className="text-[18px]">{subtotal} ETH</span>
               </div>
-            </div>
+              <div className="flex h-8 items-center justify-between text-[15px]">
+                <span>Desconto do lançamento</span>
+                <span>{discount}</span>
+              </div>
+              <div className="flex h-8 items-center justify-between text-[15px]">
+                <span>Taxa de rede</span>
+                <span className="text-[18px]">{fee} ETH</span>
+              </div>
+              <p className="text-right text-[12px] leading-4 text-brand-hi">Taxa estimada</p>
+              <div className="mt-[10px] flex h-8 items-center justify-between border-t border-brand/40 text-[16px] font-bold">
+                <span>Total</span>
+                <span className="text-[18px] text-brand">{total} ETH</span>
+              </div>
 
+              <button onClick={onGoToCheckout} className="mt-[18px] h-10 w-full rounded bg-brand text-[15px] font-bold text-ink">
+                Conectar e finalizar
+              </button>
+              <button onClick={onContinueShopping} className="mt-[12px] block w-full text-center text-[15px] leading-6 text-brand">
+                Continuar explorando
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Section: Colecionadores também viram matching Figma Page 3 */}
-        <section className="pt-10 border-t border-[#38210F] space-y-6 text-left">
-          <h2 className="text-lg font-bold font-mono text-[#FDF2DA] tracking-wide">
-            Colecionadores também viram
-          </h2>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {moreRecommended.map((item) => (
-              <NFTCard
-                key={item.id}
-                nft={item}
-                onSelect={onSelectNft}
-                onToast={onToast}
-              />
-            ))}
-          </div>
-
-          <div className="flex items-center justify-center gap-2 pt-2">
-            <span className="w-2 h-2 rounded-full bg-[#D1894B]" />
-            <span className="w-2 h-2 rounded-full bg-[#38210F]" />
-            <span className="w-2 h-2 rounded-full bg-[#38210F]" />
-          </div>
-        </section>
-
+        <h2 className="mt-[94px] text-[17px] font-bold leading-6 text-brand-hi">Colecionadores também viram</h2>
+        <div className="mt-[8px] h-px bg-brand/40" />
+        <div className="mt-[32px] grid grid-cols-5 gap-x-[26.5px]">
+          {recommended.map((m) => (
+            <button key={m.id} onClick={() => onSelectNft(m.id)} className="text-left">
+              <div className="h-[255px] rounded-lg bg-card p-1 pt-5">
+                <img src={m.image} alt={m.title} className="h-[211px] w-full rounded-2xl object-cover" />
+              </div>
+              <p className="mt-[7px] text-[15px] leading-[18px]">{m.title}</p>
+              <p className="text-[16px] font-bold leading-5 text-brand">{m.priceEth} ETH</p>
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* ================= Mobile (Figma page 12) ================= */}
+      <div className="min-h-screen md:hidden">
+        <div className="relative flex h-[88px] items-center justify-center">
+          <button
+            onClick={onContinueShopping}
+            aria-label="Voltar"
+            className="absolute left-7 top-[30px] flex h-9 w-9 items-center justify-center rounded-full bg-band text-brand"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-[20px] font-bold">Carrinho de NFTs</h1>
+        </div>
+
+        <div className="space-y-5 px-7">
+          {items.map((item) => (
+            <div key={item.nftId} className="relative flex h-[100px] overflow-hidden rounded-2xl bg-card">
+              <img src={item.nft.image} alt={item.nft.title} className="h-[100px] w-[100px] shrink-0 object-cover" />
+              <div className="min-w-0 flex-1 pl-[10px] pt-[10px]">
+                <h3 onClick={() => onSelectNft(item.nftId)} className="truncate text-[15px] font-bold leading-6">
+                  {item.nft.title}
+                </h3>
+                <p className="text-[14px] leading-5 text-sand">Edição: 1/{item.nft.edition.total}</p>
+                <p className="mt-[6px] text-[18px] font-bold leading-6 text-brand">
+                  {(parseFloat(item.nft.priceEth) * item.quantity).toFixed(2)} ETH
+                </p>
+              </div>
+              <div className="absolute right-3 top-[38px] flex items-center gap-2">
+                {item.quantity <= 1 ? (
+                  <Circle filled={false} aria-label="Remover" onClick={() => removeFromCart(item.nftId)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Circle>
+                ) : (
+                  <Circle aria-label="Diminuir" onClick={() => updateQuantity({ nftId: item.nftId, quantity: item.quantity - 1 })}>
+                    <Minus className="h-3 w-3" />
+                  </Circle>
+                )}
+                <span className="w-3 text-center text-[14px]">{item.quantity}</span>
+                <Circle aria-label="Aumentar" onClick={() => updateQuantity({ nftId: item.nftId, quantity: item.quantity + 1 })}>
+                  <Plus className="h-3 w-3" />
+                </Circle>
+              </div>
+            </div>
+          ))}
+          {items.length === 0 && <p className="py-10 text-center text-[14px] text-sand">Seu carrinho está vazio.</p>}
+        </div>
+
+        <div className="mt-4 rounded-t-[32px] bg-[#1e130f] px-6 pb-8 pt-6">
+          {couponBox(true)}
+          <div className="mt-4 space-y-[10px] text-[16px]">
+            <div className="flex justify-between"><span>Subtotal</span><span>{subtotal} ETH</span></div>
+            <div className="flex justify-between"><span>Desconto do lançamento</span><span>{discount}</span></div>
+            <div className="flex justify-between"><span>Taxa de rede</span><span>{fee} ETH</span></div>
+            <p className="text-right text-[11px] text-brand-hi">Taxa estimada</p>
+            <div className="flex items-center justify-between font-bold">
+              <span>Total</span>
+              <span className="text-[22px] text-brand">{total} ETH</span>
+            </div>
+          </div>
+          <button
+            onClick={onGoToCheckout}
+            disabled={items.length === 0}
+            className="bg-brand-grad mt-5 h-[60px] w-full rounded-[30px] text-[16px] font-bold text-ink disabled:opacity-50"
+          >
+            Conectar e finalizar
+          </button>
+        </div>
+      </div>
+    </>
   );
 }

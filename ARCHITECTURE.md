@@ -1,116 +1,34 @@
-# Arquitetura do Sistema — Kurio NFT Marketplace
+# Architecture
 
-Este documento detalha as decisões arquiteturais, contratos de API REST, eventos em tempo real com Socket.IO, políticas de sessão e cache, e decisões de UX implementadas no projeto.
+## Layout
 
----
+- `src/router.tsx` — TanStack Router (code-based). The catalog search params (`q`, `category`, `status`, `minPrice`, `maxPrice`, `sort`, `page`) are validated in the `/` route, so filters survive refresh and history navigation. Changing any filter drops `page`. Private routes (`/checkout`, `/order-confirmation/$orderId`, `/profile`, `/wallets`) redirect to `/login?redirect=...` through `beforeLoad`; unknown paths render the 404 component.
+- `src/hooks/*` — TanStack Query hooks per resource; `src/lib/api.ts` is the single Axios instance (bearer token, 401 → `kurio:session_expired` event → redirect to login).
+- `src/mocks/*` — MSW handlers (`handlers.ts`), seed and persistence (`db.ts`), Socket.IO server (`socketServer.ts`). UI code only talks to `/api/*`.
+- `src/components/*` — screens (desktop and mobile variants share one component).
 
-## 1. Contratos REST
+## REST contracts (all under `/api`)
 
-A camada de rede é interceptada pelo **Mock Service Worker (MSW)** no nível do Service Worker do navegador (`/mockServiceWorker.js`), garantindo que tanto o cliente Axios quanto requisições HTTP nativas trafeguem pelo transporte real sem mocks manuais em componentes.
+Auth (`/auth/register|login|logout|session`), NFTs (`GET /nfts` with `q, category, status, minPrice, maxPrice, sort, page, limit`; `GET /nfts/:id`), favorites, cart, quote (coupon, fees, totals), orders (`POST /orders` with an idempotency key; same key + same body returns the same order, different body returns 409), profile (data, avatar, password), wallets. Errors: 400/422 validation, 401 invalid session, 403, 404, 409 availability conflict, 5xx transient. ETH amounts are decimal strings.
 
-### Sessão e Conta
-| Método | Rota | Descrição | Status de Retorno |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/login` | Autentica colecionador com email e senha. Migra itens de visitante para a conta. | `200 OK`, `401 Unauthorized` |
-| `POST` | `/api/auth/register` | Cria nova conta com validação de unicidade de email e username. | `201 Created`, `400 Bad Request`, `409 Conflict` |
-| `GET` | `/api/auth/session` | Retorna o usuário autenticado na sessão ativa. | `200 OK`, `401 Unauthorized` |
-| `POST` | `/api/auth/logout` | Encerra a sessão e descarta tokens do armazenamento local. | `200 OK` |
-| `POST` | `/api/auth/switch-user` | Troca o usuário ativo no ambiente de demonstração. | `200 OK`, `404 Not Found` |
+## Cache policy
 
-### Catálogo de NFTs
-| Método | Rota | Parâmetros | Descrição |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/nfts` | `q`, `category`, `status`, `minPrice`, `maxPrice`, `sort`, `page`, `limit` | Listagem com filtros combináveis e paginação de 6 itens por página. |
-| `GET` | `/api/nfts/:id` | `id` no caminho | Detalhes completos da obra, traits, raridade e contrato. Retorna `404 Not Found` se inexistente. |
+`staleTime` 20 s, `gcTime` 10 min, queries retry up to 2 times except on 4xx, mutations never retry. Logout removes private caches. The favorite toggle is optimistic with rollback on failure.
 
-### Favoritos
-| Método | Rota | Descrição |
-| :--- | :--- | :--- |
-| `GET` | `/api/favorites` | Retorna os IDs favoritados pelo usuário logado. |
-| `POST` | `/api/favorites/:id` | Alterna status de favorito com suporte à **mutação otimista e rollback**. |
+## Realtime
 
-### Carrinho e Cotação
-| Método | Rota | Descrição |
-| :--- | :--- | :--- |
-| `GET` | `/api/cart` | Retorna os itens ativos do carrinho do usuário autenticado ou visitante. |
-| `POST` | `/api/cart/items` | Adiciona item validando disponibilidade em estoque. Se esgotado, retorna `409 Conflict`. |
-| `PUT` | `/api/cart/items/:nftId` | Atualiza quantidade respeitando o limite restante de estoque. |
-| `DELETE` | `/api/cart/items/:nftId`| Remove item do carrinho. |
-| `POST` | `/api/cart/quote` | Recalcula cotação em tempo real com subtotal, desconto de cupom, taxa de rede (gas fee) e total em ETH e USD. Detecta divergências de preço. |
+The browser runs the real `socket.io-client` (WebSocket transport). MSW intercepts the WebSocket and `@mswjs/socket.io-binding` speaks the Socket.IO protocol on the mock server side; REST handlers broadcast through it, so REST and events always reflect the same database.
 
-### Pedidos com Idempotência
-| Método | Rota | Headers / Body | Descrição |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/orders` | Header: `Idempotency-Key`<br>Body: `{ walletAddress, network, couponCode }` | Cria pedido com bloqueio de duplicatas. Reuso da mesma chave retorna o mesmo pedido (`200 OK`). Conflito de payload gera `409 Conflict`. Salva snapshot congelado e reduz o estoque. |
-| `GET` | `/api/orders/:id` | `id` no caminho | Consulta snapshot imutável do recibo com hash da transação. |
-| `GET` | `/api/orders` | N/A | Histórico de compras do usuário. |
+- Events: `nft.updated {nftId, priceEth, priceUsd, availableCount, version}` and `order.updated {orderId, status, version}`.
+- The client keeps the last version per resource and drops duplicates and older events; a fresh event invalidates the related queries (catalog, detail, cart, quote, orders) and shows a toast.
+- On every (re)connect the client re-subscribes with the current user id and invalidates all queries, reconciling with REST. Order events are delivered only to the subscribed owner.
 
-### Carteiras e Perfil
-| Método | Rota | Descrição |
-| :--- | :--- | :--- |
-| `GET` | `/api/wallets` | Lista de carteiras cadastradas do usuário. |
-| `POST` | `/api/wallets` | Cadastra carteira validando formato `0x...` e define principal/secundária. |
-| `PUT` | `/api/wallets/:id` | Atualiza rótulo, rede ou status principal/secundário. |
-| `DELETE` | `/api/wallets/:id` | Exclui carteira (impede exclusão se for a única ativa). |
-| `GET` | `/api/profile` | Retorna perfil do usuário logado. |
-| `PUT` | `/api/profile` | Atualiza dados biográficos, nome e username. |
-| `POST` | `/api/profile/change-password` | Valida senha atual e atualiza credencial. |
+## Known limitations
 
----
-
-## 2. Eventos em Tempo Real com Socket.IO
-
-A aplicação utiliza o protocolo Socket.IO para sincronização reativa com tolerância a falhas:
-
-### Eventos Implementados
-1. **`nft.updated`**:
-   - **Payload**: `{ nftId: string, priceEth: string, priceUsd: number, availableCount: number, version: number, timestamp: string }`
-   - **Efeito**: Atualiza simultaneamente o catálogo, página de detalhes e alerta o carrinho de compras se um item teve preço ou estoque alterado.
-2. **`order.updated`**:
-   - **Payload**: `{ orderId: string, status: 'pending' | 'confirmed' | 'failed', transactionHash?: string, version: number, timestamp: string }`
-   - **Efeito**: Reconcilia pedidos em andamento e transiciona a UI para o estado terminal de confirmação ou erro.
-
-### Tolerância a Eventos Duplicados e Obsoletos
-- O cliente de Socket mantém um registro interno de versões processadas por entidade (`entityKey -> lastVersion`).
-- Se um evento chegar com `version <= lastVersion`, o cliente descarta imediatamente o payload e registra aviso, evitando regressão de estado ou reaplicação de efeitos.
-
-### Reconciliação após Reconexão
-- Ao reconectar (`connect` ou `reconnect`), o hook `useRealtimeSync` dispara `queryClient.invalidateQueries()`, garantindo que quaisquer mutações ocorridas durante a desconexão sejam sincronizadas via REST.
-
----
-
-## 3. Política de Estado e Cache (TanStack Query)
-
-- **`staleTime`**:
-  - Catálogo e detalhes de NFTs: **30 segundos**
-  - Sessão e perfil: **5 minutos**
-  - Cotação do carrinho: Dinâmica, invalidada reativamente por eventos Socket.IO ou alterações do usuário.
-- **`gcTime` (Garbage Collection)**: 10 minutos para reter dados navegados sem sobrecarga de memória.
-- **`retry`**:
-  - Consultas (`useQuery`): 1 retry automático em falhas transitórias. Não retenta erros `4xx` (400, 401, 404, 409).
-  - Mutações (`useMutation`): **0 retries** para evitar execuções repetidas não intencionais de ações de compra ou exclusão.
-- **Atualização Otimista**:
-  - Implementada na mutação de favoritos (`useToggleFavorite`): Atualiza imediatamente o estado visual e o contador, e em caso de falha da API, executa o rollback para o snapshot anterior armazenado no contexto da mutation.
-
----
-
-## 4. Precisão Aritmética de Valores em ETH
-
-Conforme especificado no enunciado:
-- Valores em ETH trafegam rigorosamente como **strings decimais** (ex: `"1.450"`, `"0.006"`, `"1.456"`).
-- O módulo `src/lib/eth.ts` implementa aritmética de strings (`addEth`, `subtractEth`, `multiplyEth`, `formatEth`) com precisão de 3 casas decimais, evitando imprecisões de ponto flutuante em JavaScript (`0.1 + 0.2 !== 0.3`).
-- Quantidades de NFTs são sempre números inteiros positivos.
-
----
-
-## 5. Acessibilidade e Design Responsivo
-
-- **Viewports Verificados**: Total suporte e fluidez para telas mobile (390px), tablets (768px) e desktop widescreen (1440px).
-- **Semântica HTML & ARIA**:
-  - Rótulos acessíveis em botões de ação e ícones (`aria-label`).
-  - Navegação por teclado com anéis de foco visíveis (`focus-visible:ring-2 focus-visible:ring-violet-500`).
-  - Painéis modais e drawers com `role="dialog"` e `aria-modal="true"`.
-  - Notificações com `aria-live="polite"` e `aria-atomic="true"`.
-- **Skeletons Shimmer**:
-  - Cards do catálogo, detalhes e carrinhos exibem skeleton durante carregamento.
-  - Respeito à preferência de sistema `prefers-reduced-motion: reduce`, desativando animações contínuas quando solicitado pelo usuário.
+- The mock Socket.IO binding does not implement rooms, namespaces or acknowledgements, and sends no ping packets.
+- `socket.io-client` captures `WebSocket` at import time, so the app is loaded only after MSW starts (`src/main.tsx`), and a small transport subclass in `src/lib/socket.ts` reads `globalThis.WebSocket` at connect time.
+- The mock session lives in a single mock database (one active user per browser profile).
+- Components are styled with Tailwind directly; shadcn/ui is not used.
+- Google/Facebook buttons are placeholders (toast only).
+- Out-of-scope pages (support, editorial) are not implemented.
+- Lighthouse reports are not versioned; run `npm run audit:lighthouse` against the preview build to generate them.

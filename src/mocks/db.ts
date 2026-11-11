@@ -1,6 +1,7 @@
+import { IMG_OCULOS, IMG_CHAPEU, IMG_TERNO, IMG_FONE } from '../assets/images';
 import { NFT, User, Order, CartItem, NetworkSimulationConfig } from '../types';
 
-const STORAGE_KEY = 'kurio_mock_db_v2';
+const STORAGE_KEY = 'kurio_mock_db_v5';
 const SIMULATION_KEY = 'kurio_sim_config_v2';
 
 export const INITIAL_NFTS: NFT[] = [
@@ -8,7 +9,7 @@ export const INITIAL_NFTS: NFT[] = [
     id: 'emerald-ape-042',
     title: 'Emerald Ape #042',
     description: 'Um colecionável digital 1/50 finalizado à mão da coleção Kurio Editions, verificado na Ethereum, com arte desbloqueável e acesso para colecionadores.',
-    image: '/src/assets/images/nft_cyber_valkyrie_1794341377253.jpg',
+    image: IMG_OCULOS,
     creator: {
       id: 'creator-nova-sato',
       name: 'Nova Sato',
@@ -37,7 +38,7 @@ export const INITIAL_NFTS: NFT[] = [
       score: 4.8,
       reviewsCount: 19,
     },
-    createdAt: '2026-10-14T10:00:00Z',
+    createdAt: '2026-11-09T12:00:00Z',
     version: 1,
     viewsCount: 3420,
     likesCount: 142,
@@ -46,7 +47,7 @@ export const INITIAL_NFTS: NFT[] = [
     id: 'sage-nomad-009',
     title: 'Sage Nomad #009',
     description: 'Nômade digital das dunas etéreas da coleção Kurio Editions, com chapéu de expedicionário e manto índigo.',
-    image: '/src/assets/images/nft_ethereal_chronos_1794341378030.jpg',
+    image: IMG_CHAPEU,
     creator: {
       id: 'creator-nova-sato',
       name: 'Nova Sato',
@@ -74,7 +75,7 @@ export const INITIAL_NFTS: NFT[] = [
       score: 4.9,
       reviewsCount: 14,
     },
-    createdAt: '2026-10-18T14:30:00Z',
+    createdAt: '2026-11-08T12:00:00Z',
     version: 1,
     viewsCount: 2890,
     likesCount: 118,
@@ -83,7 +84,7 @@ export const INITIAL_NFTS: NFT[] = [
     id: 'neon-vessel-552',
     title: 'Neon Vessel #552',
     description: 'Entidade cibernética com jaqueta bomber verde esmeralda e medalhão de jade puro.',
-    image: '/src/assets/images/nft_quantum_samurai_1794341379021.jpg',
+    image: IMG_TERNO,
     creator: {
       id: 'creator-nova-sato',
       name: 'Nova Sato',
@@ -113,7 +114,7 @@ export const INITIAL_NFTS: NFT[] = [
       score: 5.0,
       reviewsCount: 31,
     },
-    createdAt: '2026-10-22T08:15:00Z',
+    createdAt: '2026-11-07T12:00:00Z',
     version: 1,
     viewsCount: 4520,
     likesCount: 265,
@@ -122,7 +123,7 @@ export const INITIAL_NFTS: NFT[] = [
     id: 'cosmic-bloom-118',
     title: 'Cosmic Bloom #118',
     description: 'Exploração espacial com paleta violeta e capacete de voo interestelar.',
-    image: '/src/assets/images/nft_sol_solarium_1794341379684.jpg',
+    image: IMG_CHAPEU,
     creator: {
       id: 'creator-nova-sato',
       name: 'Nova Sato',
@@ -150,7 +151,7 @@ export const INITIAL_NFTS: NFT[] = [
       score: 4.7,
       reviewsCount: 22,
     },
-    createdAt: '2026-10-25T11:45:00Z',
+    createdAt: '2026-11-06T12:00:00Z',
     version: 1,
     viewsCount: 1980,
     likesCount: 89,
@@ -159,7 +160,7 @@ export const INITIAL_NFTS: NFT[] = [
     id: 'violet-nomad-314',
     title: 'Violet Nomad #314',
     description: 'Viajante sônico equipado com fones hi-fi dourados e expressão serena.',
-    image: '/src/assets/images/nft_cyber_valkyrie_1794341377253.jpg',
+    image: IMG_CHAPEU,
     creator: {
       id: 'creator-nova-sato',
       name: 'Nova Sato',
@@ -187,7 +188,7 @@ export const INITIAL_NFTS: NFT[] = [
       score: 4.8,
       reviewsCount: 17,
     },
-    createdAt: '2026-10-28T09:20:00Z',
+    createdAt: '2026-11-05T12:00:00Z',
     version: 1,
     viewsCount: 2450,
     likesCount: 133,
@@ -196,7 +197,7 @@ export const INITIAL_NFTS: NFT[] = [
     id: 'ivory-baron-088',
     title: 'Ivory Baron #088',
     description: 'Patriarca de marfim com terno de alfaiataria em linho cru e olhar contemplativo.',
-    image: '/src/assets/images/nft_quantum_samurai_1794341379021.jpg',
+    image: IMG_TERNO,
     creator: {
       id: 'creator-nova-sato',
       name: 'Nova Sato',
@@ -224,7 +225,7 @@ export const INITIAL_NFTS: NFT[] = [
       score: 4.9,
       reviewsCount: 28,
     },
-    createdAt: '2026-10-30T20:10:00Z',
+    createdAt: '2026-11-04T12:00:00Z',
     version: 1,
     viewsCount: 3100,
     likesCount: 185,
@@ -233,7 +234,7 @@ export const INITIAL_NFTS: NFT[] = [
     id: 'golden-beat-207',
     title: 'Golden Beat #207',
     description: 'Edição limitada em ouro reluzente com headphones profissionais e sorriso icônico.',
-    image: '/src/assets/images/nft_sol_solarium_1794341379684.jpg',
+    image: IMG_FONE,
     creator: {
       id: 'creator-nova-sato',
       name: 'Nova Sato',
@@ -261,7 +262,7 @@ export const INITIAL_NFTS: NFT[] = [
       score: 4.6,
       reviewsCount: 12,
     },
-    createdAt: '2026-11-01T12:00:00Z',
+    createdAt: '2026-11-03T12:00:00Z',
     version: 1,
     viewsCount: 1670,
     likesCount: 78,
@@ -270,7 +271,7 @@ export const INITIAL_NFTS: NFT[] = [
     id: 'golden-signal-160',
     title: 'Golden Signal #160',
     description: 'Sinal luminoso dourado captado nos limites do metaverso com jaqueta de piloto.',
-    image: '/src/assets/images/nft_ethereal_chronos_1794341378030.jpg',
+    image: IMG_FONE,
     creator: {
       id: 'creator-nova-sato',
       name: 'Nova Sato',
@@ -298,7 +299,7 @@ export const INITIAL_NFTS: NFT[] = [
       score: 4.8,
       reviewsCount: 9,
     },
-    createdAt: '2026-11-02T15:00:00Z',
+    createdAt: '2026-11-02T12:00:00Z',
     version: 1,
     viewsCount: 1210,
     likesCount: 65,
@@ -307,7 +308,7 @@ export const INITIAL_NFTS: NFT[] = [
     id: 'golden-frequency-071',
     title: 'Golden Frequency #071',
     description: 'Frequência sonora dourada de transição tonal com bucket hat cinza azulado.',
-    image: '/src/assets/images/nft_cyber_valkyrie_1794341377253.jpg',
+    image: IMG_FONE,
     creator: {
       id: 'creator-nova-sato',
       name: 'Nova Sato',
@@ -335,7 +336,7 @@ export const INITIAL_NFTS: NFT[] = [
       score: 4.7,
       reviewsCount: 11,
     },
-    createdAt: '2026-11-03T18:00:00Z',
+    createdAt: '2026-11-01T12:00:00Z',
     version: 1,
     viewsCount: 1450,
     likesCount: 82,
@@ -475,7 +476,7 @@ export function loadDatabase(): MockDatabaseState {
           {
             nftId: 'emerald-ape-042',
             title: 'Emerald Ape #042',
-            image: '/src/assets/images/nft_cyber_valkyrie_1794341377253.jpg',
+            image: IMG_OCULOS,
             quantity: 2,
             unitPriceEth: '1.19',
             totalEth: '2.38',
@@ -484,7 +485,7 @@ export function loadDatabase(): MockDatabaseState {
           {
             nftId: 'violet-nomad-314',
             title: 'Violet Nomad #314',
-            image: '/src/assets/images/nft_cyber_valkyrie_1794341377253.jpg',
+            image: IMG_CHAPEU,
             quantity: 6,
             unitPriceEth: '1.39',
             totalEth: '8.34',
@@ -493,7 +494,7 @@ export function loadDatabase(): MockDatabaseState {
           {
             nftId: 'ivory-baron-088',
             title: 'Ivory Baron #088',
-            image: '/src/assets/images/nft_quantum_samurai_1794341379021.jpg',
+            image: IMG_TERNO,
             quantity: 9,
             unitPriceEth: '1.79',
             totalEth: '16.11',

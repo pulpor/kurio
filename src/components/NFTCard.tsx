@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { Heart, ShoppingBag, Check } from 'lucide-react';
+import React from 'react';
+import { Heart } from 'lucide-react';
 import { NFT } from '../types';
 import { useToggleFavorite } from '../hooks/useNFTs';
-import { useCart } from '../hooks/useCart';
 
 interface NFTCardProps {
   nft: NFT;
@@ -12,10 +11,8 @@ interface NFTCardProps {
 
 export function NFTCard({ nft, onSelect, onToast }: NFTCardProps) {
   const toggleFavorite = useToggleFavorite();
-  const { addToCart, isAddingToCart } = useCart();
-  const [justAdded, setJustAdded] = useState(false);
 
-  const handleFavoriteClick = async (e: React.MouseEvent) => {
+  const handleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
       await toggleFavorite.mutateAsync(nft.id);
@@ -28,95 +25,34 @@ export function NFTCard({ nft, onSelect, onToast }: NFTCardProps) {
     }
   };
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await addToCart({ nftId: nft.id, quantity: 1 });
-      setJustAdded(true);
-      setTimeout(() => setJustAdded(false), 1500);
-      onToast({
-        type: 'success',
-        title: 'Adicionado ao Carrinho',
-        description: `${nft.title} foi adicionado com sucesso.`,
-      });
-    } catch (err: any) {
-      onToast({
-        type: 'error',
-        title: 'Erro ao adicionar',
-        description: err?.response?.data?.error || 'Não foi possível adicionar ao carrinho.',
-      });
-    }
-  };
-
   return (
-    <article
-      onClick={() => onSelect(nft.id)}
-      className="group relative flex flex-col bg-[#231611] border border-[#38210F] rounded-2xl overflow-hidden hover:border-[#D1894B] hover:-translate-y-1 transition-all duration-200 cursor-pointer text-left"
-    >
-      {/* Visual Image Asset */}
-      <div className="relative aspect-square w-full overflow-hidden bg-[#130C0A]">
+    <article onClick={() => onSelect(nft.id)} className="cursor-pointer text-left">
+      <div className="relative h-[200px] rounded-3xl bg-card p-[5px] md:h-[300px] md:rounded-lg md:p-1 md:pt-[31px]">
         <img
           src={nft.image}
           alt={nft.title}
-          referrerPolicy="no-referrer"
-          className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-300"
+          className="h-[164px] w-full rounded-2xl object-cover md:h-[250px]"
         />
-
-        {/* Optional RARO Badge from Figma Page 1 & 6 */}
         {nft.rarityBadge && (
-          <span className="absolute top-3 left-3 px-2 py-0.5 rounded bg-[#D1894B] text-[#130C0A] text-[10px] font-mono font-extrabold uppercase tracking-wider">
+          <span className="absolute left-[5px] top-[5px] bg-brand px-3 py-[3px] text-[12px] font-bold leading-4 text-ink md:left-1 md:top-[31px] md:text-[15px] md:leading-5">
             {nft.rarityBadge}
           </span>
         )}
-
-        {/* Favorite Icon */}
         <button
-          onClick={handleFavoriteClick}
+          onClick={handleFavorite}
           aria-label={nft.isFavorited ? 'Remover dos favoritos' : 'Favoritar'}
-          className={`absolute top-3 right-3 p-2 rounded-xl backdrop-blur-md transition-colors ${
-            nft.isFavorited
-              ? 'bg-[#D1894B]/30 text-[#D1894B]'
-              : 'bg-[#130C0A]/70 text-[#A8907E] hover:text-[#FDF2DA]'
-          }`}
+          className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-ink/60 text-brand md:hidden"
         >
-          <Heart className={`w-4 h-4 ${nft.isFavorited ? 'fill-[#D1894B]' : ''}`} />
+          <Heart className="h-4 w-4" fill={nft.isFavorited ? 'currentColor' : 'none'} />
         </button>
       </div>
-
-      {/* Card Content matching Figma */}
-      <div className="p-4 space-y-1.5 flex flex-col flex-1 justify-between">
-        <div>
-          <h3 className="text-sm sm:text-base font-bold font-mono text-[#FDF2DA] group-hover:text-[#D1894B] transition-colors truncate">
-            {nft.title}
-          </h3>
-        </div>
-
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono font-bold text-sm text-[#D1894B] tabular-nums">
-              {nft.priceEth} ETH
-            </span>
-            {nft.originalPriceEth && (
-              <span className="font-mono text-xs text-[#7A6352] line-through tabular-nums">
-                {nft.originalPriceEth}
-              </span>
-            )}
-          </div>
-
-          <button
-            onClick={handleAddToCart}
-            disabled={isAddingToCart}
-            title="Adicionar ao carrinho"
-            className="p-1.5 rounded-lg border border-[#38210F] bg-[#130C0A] text-[#A8907E] hover:text-[#FDF2DA] hover:border-[#D1894B] transition-colors"
-          >
-            {justAdded ? (
-              <Check className="w-3.5 h-3.5 text-emerald-400" />
-            ) : (
-              <ShoppingBag className="w-3.5 h-3.5" />
-            )}
-          </button>
-        </div>
-      </div>
+      <h3 className="mt-2 text-[14px] leading-5 md:mt-[10px] md:text-[16px] md:leading-6">{nft.title}</h3>
+      <p className="text-[15px] font-bold leading-6 text-brand md:text-[18px] md:leading-7">
+        {nft.priceEth} ETH
+        {nft.originalPriceEth && (
+          <span className="ml-3 font-normal text-sand line-through decoration-1">{nft.originalPriceEth}</span>
+        )}
+      </p>
     </article>
   );
 }
