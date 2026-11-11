@@ -10,9 +10,6 @@ import {
   LogOut,
   Plus,
   Trash2,
-  CheckCircle,
-  Layers,
-  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useWallets } from '../hooks/useWallets';
@@ -73,7 +70,6 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
     }
 
     try {
-      // If we already have a primary wallet, update it or create new
       const primary = wallets.find((w) => w.isPrimary);
       if (primary) {
         await updateWallet({
@@ -171,15 +167,15 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
   };
 
   return (
-    <div className="bg-[#0D0B08] text-[#FFF8F0] py-8 lg:py-12 min-h-[85vh]">
+    <div className="bg-[#130C0A] text-[#FDF2DA] py-8 lg:py-12 min-h-[85vh] font-mono">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
           {/* ========================================================== */}
           {/* LEFT SIDEBAR: Meu perfil matching Figma Page 9 exact       */}
           {/* ========================================================== */}
-          <aside className="lg:col-span-3 space-y-4 bg-[#161310] border border-[#2C241D] rounded-2xl p-5 text-xs text-left">
-            <h2 className="text-sm font-bold text-[#FFF8F0] tracking-wide mb-3">
+          <aside className="lg:col-span-3 space-y-4 bg-[#231611] border border-[#38210F] rounded-2xl p-5 text-xs text-left">
+            <h2 className="text-sm font-bold font-mono text-[#FDF2DA] tracking-wide mb-3">
               Meu perfil
             </h2>
 
@@ -193,10 +189,10 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                     onClick={() => {
                       if (item.action) item.action();
                     }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors ${
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors font-mono ${
                       isActive
-                        ? 'text-[#D98A48] bg-[#D98A48]/10 font-bold'
-                        : 'text-[#A89A8A] hover:bg-[#1F1A15] hover:text-[#FFF8F0]'
+                        ? 'text-[#D1894B] bg-[#D1894B]/10 font-bold'
+                        : 'text-[#A8907E] hover:bg-[#38210F]/40 hover:text-[#FDF2DA]'
                     }`}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
@@ -205,11 +201,11 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                 );
               })}
 
-              <div className="border-t border-[#2C241D] my-2" />
+              <div className="border-t border-[#38210F] my-2" />
 
               <button
                 onClick={() => logout()}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-400 hover:bg-rose-950/20 transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-400 hover:bg-rose-950/20 transition-colors font-mono"
               >
                 <LogOut className="w-4 h-4 shrink-0" />
                 <span>Sair</span>
@@ -223,22 +219,22 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
           <main className="lg:col-span-9 space-y-8 text-left">
             
             {/* CARTEIRA PRINCIPAL CARD */}
-            <div className="bg-[#161310] border border-[#2C241D] rounded-2xl p-6 sm:p-8 space-y-6">
+            <div className="bg-[#231611] border border-[#38210F] rounded-2xl p-6 sm:p-8 space-y-6">
               
               {/* Header with Title + "Adicionar" button on top right */}
-              <div className="flex items-center justify-between pb-3 border-b border-[#2C241D]">
+              <div className="flex items-center justify-between pb-3 border-b border-[#38210F]">
                 <div>
-                  <h1 className="text-base font-bold text-[#FFF8F0] tracking-wide">
+                  <h1 className="text-base font-bold font-mono text-[#FDF2DA] tracking-wide">
                     Carteira principal
                   </h1>
-                  <p className="text-xs text-[#A89A8A] mt-1">
+                  <p className="text-xs text-[#A8907E] mt-1 font-mono">
                     Estas carteiras ficam disponíveis no pagamento e para receber NFTs comprados.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowSecondaryForm(true)}
-                  className="px-3.5 py-1.5 bg-[#D98A48] hover:bg-[#E59550] text-[#0D0B08] font-bold text-xs rounded-md flex items-center gap-1.5 shrink-0"
+                  className="px-3.5 py-1.5 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono text-xs rounded-md flex items-center gap-1.5 shrink-0 uppercase tracking-wider"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Adicionar
@@ -246,12 +242,12 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
               </div>
 
               {/* Form matching Page 9 2-column layout */}
-              <form onSubmit={handleSavePrimaryWallet} className="space-y-5 text-xs">
+              <form onSubmit={handleSavePrimaryWallet} className="space-y-5 text-xs font-mono">
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Nome de exibição* */}
                   <div className="space-y-1.5">
-                    <label className="text-[#A89A8A] font-medium block">
+                    <label className="text-[#A8907E] font-medium block">
                       Nome de exibição*
                     </label>
                     <input
@@ -259,13 +255,13 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                       required
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2.5 text-xs text-[#FFF8F0] outline-none focus:border-[#D98A48]"
+                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
                     />
                   </div>
 
                   {/* Apelido da carteira* */}
                   <div className="space-y-1.5">
-                    <label className="text-[#A89A8A] font-medium block">
+                    <label className="text-[#A8907E] font-medium block">
                       Apelido da carteira*
                     </label>
                     <input
@@ -273,19 +269,19 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                       required
                       value={walletNickname}
                       onChange={(e) => setWalletNickname(e.target.value)}
-                      className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2.5 text-xs text-[#FFF8F0] outline-none focus:border-[#D98A48]"
+                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
                     />
                   </div>
 
                   {/* Rede * */}
                   <div className="space-y-1.5">
-                    <label className="text-[#A89A8A] font-medium block">
+                    <label className="text-[#A8907E] font-medium block">
                       Rede *
                     </label>
                     <select
                       value={network}
                       onChange={(e) => setNetwork(e.target.value as BlockchainNetwork)}
-                      className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2.5 text-xs text-[#FFF8F0] outline-none focus:border-[#D98A48]"
+                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
                     >
                       <option value="Ethereum">Ethereum</option>
                       <option value="Polygon">Polygon</option>
@@ -296,7 +292,7 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
 
                   {/* Nome do perfil* */}
                   <div className="space-y-1.5">
-                    <label className="text-[#A89A8A] font-medium block">
+                    <label className="text-[#A8907E] font-medium block">
                       Nome do perfil*
                     </label>
                     <input
@@ -304,13 +300,13 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                       required
                       value={profileName}
                       onChange={(e) => setProfileName(e.target.value)}
-                      className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2.5 text-xs text-[#FFF8F0] outline-none focus:border-[#D98A48]"
+                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
                     />
                   </div>
 
                   {/* Endereço da carteira* */}
                   <div className="space-y-1.5">
-                    <label className="text-[#A89A8A] font-medium block">
+                    <label className="text-[#A8907E] font-medium block">
                       Endereço da carteira*
                     </label>
                     <input
@@ -319,13 +315,13 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                       placeholder="Endereço 0x da carteira"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2.5 text-xs text-[#FFF8F0] font-mono outline-none focus:border-[#D98A48]"
+                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] font-mono outline-none focus:border-[#D1894B]"
                     />
                   </div>
 
                   {/* ENS ou carteira secundária (opcional) */}
                   <div className="space-y-1.5">
-                    <label className="text-[#A89A8A] font-medium block">
+                    <label className="text-[#A8907E] font-medium block">
                       ENS ou carteira secundária (opcional)
                     </label>
                     <input
@@ -333,19 +329,19 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                       placeholder="backup.eth ou 0x..."
                       value={ensSecondary}
                       onChange={(e) => setEnsSecondary(e.target.value)}
-                      className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2.5 text-xs text-[#FFF8F0] font-mono outline-none focus:border-[#D98A48]"
+                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] font-mono outline-none focus:border-[#D1894B]"
                     />
                   </div>
 
                   {/* Tipo de carteira* */}
                   <div className="space-y-1.5">
-                    <label className="text-[#A89A8A] font-medium block">
+                    <label className="text-[#A8907E] font-medium block">
                       Tipo de carteira*
                     </label>
                     <select
                       value={walletType}
                       onChange={(e) => setWalletType(e.target.value)}
-                      className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2.5 text-xs text-[#FFF8F0] outline-none focus:border-[#D98A48]"
+                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
                     >
                       <option value="MetaMask">MetaMask</option>
                       <option value="Coinbase Wallet">Coinbase Wallet</option>
@@ -356,20 +352,20 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
 
                   {/* Código de indicação* */}
                   <div className="space-y-1.5">
-                    <label className="text-[#A89A8A] font-medium block">
+                    <label className="text-[#A8907E] font-medium block">
                       Código de indicação*
                     </label>
                     <input
                       type="text"
                       value={referralCode}
                       onChange={(e) => setReferralCode(e.target.value)}
-                      className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2.5 text-xs text-[#FFF8F0] font-mono outline-none focus:border-[#D98A48]"
+                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] font-mono outline-none focus:border-[#D1894B]"
                     />
                   </div>
 
                   {/* E-mail* */}
                   <div className="space-y-1.5">
-                    <label className="text-[#A89A8A] font-medium block">
+                    <label className="text-[#A8907E] font-medium block">
                       E-mail*
                     </label>
                     <input
@@ -377,13 +373,13 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2.5 text-xs text-[#FFF8F0] outline-none focus:border-[#D98A48]"
+                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
                     />
                   </div>
 
                   {/* Nome ENS * */}
                   <div className="space-y-1.5">
-                    <label className="text-[#A89A8A] font-medium block">
+                    <label className="text-[#A8907E] font-medium block">
                       Nome ENS *
                     </label>
                     <div className="flex">
@@ -391,9 +387,9 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                         type="text"
                         value={ensName}
                         onChange={(e) => setEnsName(e.target.value)}
-                        className="flex-1 bg-[#0D0B08] border border-r-0 border-[#2C241D] rounded-l-md px-3 py-2.5 text-xs text-[#FFF8F0] font-mono outline-none focus:border-[#D98A48]"
+                        className="flex-1 bg-[#130C0A] border border-r-0 border-[#38210F] rounded-l-md px-3 py-2.5 text-xs text-[#FDF2DA] font-mono outline-none focus:border-[#D1894B]"
                       />
-                      <span className="bg-[#1F1A15] border border-[#2C241D] rounded-r-md px-3 py-2.5 text-xs text-[#A89A8A] font-mono">
+                      <span className="bg-[#38210F]/50 border border-[#38210F] rounded-r-md px-3 py-2.5 text-xs text-[#A8907E] font-mono">
                         .eth
                       </span>
                     </div>
@@ -406,7 +402,7 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                   <button
                     type="submit"
                     disabled={isCreating}
-                    className="px-6 py-2.5 bg-[#D98A48] hover:bg-[#E59550] text-[#0D0B08] font-bold text-xs uppercase tracking-wider rounded-md transition-colors shadow-lg shadow-[#D98A48]/20"
+                    className="px-6 py-2.5 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono text-xs uppercase tracking-wider rounded-md transition-colors shadow-lg shadow-[#D1894B]/20"
                   >
                     {isCreating ? 'Salvando...' : 'Salvar carteira'}
                   </button>
@@ -416,24 +412,24 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
             </div>
 
             {/* CARTEIRA SECUNDÁRIA SECTION matching Figma Page 9 exact */}
-            <div className="bg-[#161310] border border-[#2C241D] rounded-2xl p-6 sm:p-8 space-y-5">
+            <div className="bg-[#231611] border border-[#38210F] rounded-2xl p-6 sm:p-8 space-y-5">
               
-              <h2 className="text-sm font-bold text-[#FFF8F0] tracking-wide">
+              <h2 className="text-sm font-bold font-mono text-[#FDF2DA] tracking-wide">
                 Carteira secundária
               </h2>
 
-              <p className="text-xs text-[#A89A8A]">
+              <p className="text-xs text-[#A8907E]">
                 Você ainda não adicionou uma carteira secundária.
               </p>
 
               {/* Radio option matching Page 9: Igual à carteira principal */}
               <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2 cursor-pointer text-xs text-[#FFF8F0]">
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-[#FDF2DA] font-mono">
                   <input
                     type="checkbox"
                     checked={sameAsPrimary}
                     onChange={(e) => setSameAsPrimary(e.target.checked)}
-                    className="w-4 h-4 rounded accent-[#D98A48] bg-[#0D0B08] border-[#2C241D]"
+                    className="w-4 h-4 rounded accent-[#D1894B] bg-[#130C0A] border-[#38210F]"
                   />
                   <span>Igual à carteira principal</span>
                 </label>
@@ -441,26 +437,26 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
 
               {/* Collapsible secondary form if user chooses to add a distinct secondary wallet */}
               {showSecondaryForm && !sameAsPrimary && (
-                <div className="p-4 rounded-xl bg-[#0D0B08] border border-[#2C241D] space-y-3 animate-in fade-in">
-                  <h3 className="text-xs font-bold text-[#FFF8F0]">Cadastrar Nova Carteira Secundária</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-4 rounded-xl bg-[#130C0A] border border-[#38210F] space-y-3 animate-in fade-in">
+                  <h3 className="text-xs font-bold font-mono text-[#FDF2DA]">Cadastrar Nova Carteira Secundária</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
                     <div>
-                      <label className="text-[#A89A8A] block mb-1">Rótulo / Nome</label>
+                      <label className="text-[#A8907E] block mb-1">Rótulo / Nome</label>
                       <input
                         type="text"
                         value={secondaryLabel}
                         onChange={(e) => setSecondaryLabel(e.target.value)}
-                        className="w-full bg-[#161310] border border-[#2C241D] rounded px-3 py-2 text-[#FFF8F0]"
+                        className="w-full bg-[#231611] border border-[#38210F] rounded px-3 py-2 text-[#FDF2DA]"
                       />
                     </div>
                     <div>
-                      <label className="text-[#A89A8A] block mb-1">Endereço Público (0x...)</label>
+                      <label className="text-[#A8907E] block mb-1">Endereço Público (0x...)</label>
                       <input
                         type="text"
                         placeholder="0x..."
                         value={secondaryAddress}
                         onChange={(e) => setSecondaryAddress(e.target.value)}
-                        className="w-full bg-[#161310] border border-[#2C241D] rounded px-3 py-2 text-[#FFF8F0] font-mono"
+                        className="w-full bg-[#231611] border border-[#38210F] rounded px-3 py-2 text-[#FDF2DA] font-mono"
                       />
                     </div>
                   </div>
@@ -472,7 +468,7 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                 <button
                   type="button"
                   onClick={handleAddSecondary}
-                  className="px-6 py-2 bg-[#D98A48] hover:bg-[#E59550] text-[#0D0B08] font-bold text-xs uppercase tracking-wider rounded-md transition-colors"
+                  className="px-6 py-2 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono text-xs uppercase tracking-wider rounded-md transition-colors"
                 >
                   Adicionar
                 </button>
@@ -481,8 +477,8 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
             </div>
 
             {/* LIST OF CURRENT WALLETS */}
-            <div className="bg-[#161310] border border-[#2C241D] rounded-2xl p-6 sm:p-8 space-y-4">
-              <h2 className="text-xs font-bold text-[#FFF8F0] uppercase tracking-wider">
+            <div className="bg-[#231611] border border-[#38210F] rounded-2xl p-6 sm:p-8 space-y-4">
+              <h2 className="text-xs font-bold font-mono text-[#FDF2DA] uppercase tracking-wider">
                 Carteiras Vinculadas na Sessão ({wallets.length})
               </h2>
 
@@ -490,29 +486,29 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                 {wallets.map((w) => (
                   <div
                     key={w.id}
-                    className="p-4 rounded-xl bg-[#0D0B08] border border-[#2C241D] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                    className="p-4 rounded-xl bg-[#130C0A] border border-[#38210F] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-[#FFF8F0]">{w.label}</span>
+                        <span className="font-bold text-[#FDF2DA]">{w.label}</span>
                         {w.isPrimary && (
-                          <span className="px-2 py-0.5 rounded bg-[#D98A48]/20 border border-[#D98A48]/40 text-[#D98A48] text-[10px] font-bold uppercase">
+                          <span className="px-2 py-0.5 rounded bg-[#D1894B]/20 border border-[#D1894B]/40 text-[#D1894B] text-[10px] font-bold uppercase">
                             Principal
                           </span>
                         )}
                         {w.isSecondary && (
-                          <span className="px-2 py-0.5 rounded bg-cyan-900/30 border border-cyan-700/50 text-cyan-300 text-[10px] font-bold uppercase">
+                          <span className="px-2 py-0.5 rounded bg-[#38210F]/40 border border-[#D1894B]/30 text-[#D1894B] text-[10px] font-bold uppercase">
                             Secundária
                           </span>
                         )}
                       </div>
-                      <p className="font-mono text-[#A89A8A] text-[11px] truncate max-w-sm sm:max-w-md">
+                      <p className="font-mono text-[#A8907E] text-[11px] truncate max-w-sm sm:max-w-md">
                         {w.address}
                       </p>
-                      <div className="flex items-center gap-3 text-[11px] text-[#A89A8A]">
-                        <span>Rede: <strong className="text-[#FFF8F0]">{w.network}</strong></span>
+                      <div className="flex items-center gap-3 text-[11px] text-[#A8907E]">
+                        <span>Rede: <strong className="text-[#FDF2DA]">{w.network}</strong></span>
                         <span>·</span>
-                        <span>Saldo: <strong className="font-mono text-[#D98A48]">{w.balanceEth} ETH</strong></span>
+                        <span>Saldo: <strong className="font-mono text-[#D1894B]">{w.balanceEth} ETH</strong></span>
                       </div>
                     </div>
 
@@ -521,7 +517,7 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                         <button
                           type="button"
                           onClick={() => updateWallet({ id: w.id, isPrimary: true })}
-                          className="px-3 py-1 rounded border border-[#2C241D] hover:border-[#D98A48] text-[11px] text-[#A89A8A] hover:text-[#FFF8F0]"
+                          className="px-3 py-1 rounded border border-[#38210F] hover:border-[#D1894B] text-[11px] text-[#A8907E] hover:text-[#FDF2DA]"
                         >
                           Definir Principal
                         </button>
@@ -529,7 +525,7 @@ export function WalletsPage({ onNavigateToProfile, onToast }: WalletsPageProps) 
                       <button
                         type="button"
                         onClick={() => handleDeleteWallet(w.id, w.label)}
-                        className="p-1.5 rounded text-[#A89A8A] hover:text-rose-400 hover:bg-rose-950/20"
+                        className="p-1.5 rounded text-[#A8907E] hover:text-rose-400 hover:bg-rose-950/20"
                         title="Remover carteira"
                       >
                         <Trash2 className="w-4 h-4" />

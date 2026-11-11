@@ -337,7 +337,7 @@ function MarketplaceApp() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0D0B08] text-[#FFF8F0] selection:bg-[#D98A48]/30 selection:text-[#FFF8F0]">
+    <div className="min-h-screen flex flex-col bg-[#130C0A] text-[#FDF2DA] selection:bg-[#D1894B]/30 selection:text-[#FDF2DA] font-mono">
       <Navbar
         currentPath={currentPath}
         onNavigate={navigate}

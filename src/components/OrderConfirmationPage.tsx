@@ -2,8 +2,6 @@ import React from 'react';
 import {
   X,
   Mail,
-  ShieldCheck,
-  Check,
 } from 'lucide-react';
 import { useOrderDetail } from '../hooks/useOrders';
 import { Skeleton } from './ui/Skeleton';
@@ -18,14 +16,13 @@ interface OrderConfirmationPageProps {
 export function OrderConfirmationPage({
   orderId,
   onGoToMarketplace,
-  onGoToProfile,
   onToast,
 }: OrderConfirmationPageProps) {
   const { data: order, isLoading } = useOrderDetail(orderId);
 
   if (isLoading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 space-y-6 bg-[#0D0B08]">
+      <div className="max-w-2xl mx-auto px-4 py-20 space-y-6 bg-[#130C0A]">
         <Skeleton className="h-64 w-full rounded-2xl" />
       </div>
     );
@@ -62,73 +59,73 @@ export function OrderConfirmationPage({
   ];
 
   return (
-    <div className="bg-[#0D0B08] text-[#FFF8F0] min-h-[85vh] flex items-center justify-center p-4 sm:p-6">
+    <div className="bg-[#130C0A] text-[#FDF2DA] min-h-[85vh] flex items-center justify-center p-4 sm:p-6 font-mono">
       
       {/* Modal Card matching Figma Page 5 exact */}
-      <div className="relative w-full max-w-xl bg-[#161310] border border-[#2C241D] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 text-left">
+      <div className="relative w-full max-w-xl bg-[#231611] border border-[#38210F] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 text-left">
         
         {/* Close Button top right */}
         <button
           onClick={onGoToMarketplace}
           aria-label="Fechar"
-          className="absolute top-5 right-5 text-[#A89A8A] hover:text-[#FFF8F0] p-1"
+          className="absolute top-5 right-5 text-[#A8907E] hover:text-[#FDF2DA] p-1"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Envelope Icon with THANK YOU seal matching Figma */}
         <div className="text-center space-y-3 pt-2">
-          <div className="w-14 h-14 mx-auto rounded-xl bg-[#D98A48]/15 border border-[#D98A48] flex flex-col items-center justify-center text-[#D98A48] shadow-lg shadow-[#D98A48]/10">
+          <div className="w-14 h-14 mx-auto rounded-xl bg-[#D1894B]/15 border border-[#D1894B] flex flex-col items-center justify-center text-[#D1894B] shadow-lg shadow-[#D1894B]/10">
             <Mail className="w-6 h-6 mb-0.5" />
             <span className="text-[7px] font-mono font-black tracking-widest leading-none">THANK YOU</span>
           </div>
 
-          <h1 className="text-lg sm:text-xl font-bold text-[#FFF8F0] tracking-tight">
+          <h1 className="text-lg sm:text-xl font-bold font-mono text-[#FDF2DA] tracking-tight">
             Seus NFTs agora estão na sua carteira
           </h1>
         </div>
 
         {/* Meta Bar Strip matching Figma Page 5 */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl bg-[#0D0B08] border border-[#2C241D] text-[11px]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl bg-[#130C0A] border border-[#38210F] text-[11px] font-mono">
           <div>
-            <span className="text-[#A89A8A] block">ID da transação</span>
-            <span className="font-mono font-bold text-[#FFF8F0] truncate block">
+            <span className="text-[#A8907E] block">ID da transação</span>
+            <span className="font-mono font-bold text-[#FDF2DA] truncate block">
               {order?.transactionHash ? `${order.transactionHash.slice(0, 6)}…${order.transactionHash.slice(-4)}` : '0xA91F…E82C'}
             </span>
           </div>
           <div>
-            <span className="text-[#A89A8A] block">Data</span>
-            <span className="font-mono text-[#FFF8F0]">
+            <span className="text-[#A8907E] block">Data</span>
+            <span className="font-mono text-[#FDF2DA]">
               {order?.createdAt ? new Date(order.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : '29 Jul, 2026'}
             </span>
           </div>
           <div>
-            <span className="text-[#A89A8A] block">Total</span>
-            <span className="font-mono font-bold text-[#D98A48]">
+            <span className="text-[#A8907E] block">Total</span>
+            <span className="font-mono font-bold text-[#D1894B]">
               {order?.totalEth || '26.846'} ETH
             </span>
           </div>
           <div>
-            <span className="text-[#A89A8A] block">Carteira</span>
-            <span className="font-semibold text-[#FFF8F0]">
-              {order?.walletProvider || 'MetaMask'}
+            <span className="text-[#A8907E] block">Carteira</span>
+            <span className="font-semibold text-[#FDF2DA]">
+              {order?.walletProvider || order?.network || 'MetaMask'}
             </span>
           </div>
         </div>
 
         {/* Detalhes da transação matching Figma */}
-        <div className="space-y-3 pt-2">
-          <h2 className="text-xs font-bold text-[#A89A8A] uppercase tracking-wider">
+        <div className="space-y-3 pt-2 font-mono">
+          <h2 className="text-xs font-bold text-[#A8907E] uppercase tracking-wider">
             Detalhes da transação
           </h2>
 
-          <div className="flex items-center justify-between text-[11px] font-bold text-[#6E6255] uppercase border-b border-[#2C241D] pb-1.5">
+          <div className="flex items-center justify-between text-[11px] font-bold text-[#7A6352] uppercase border-b border-[#38210F] pb-1.5">
             <span>NFTs</span>
             <span>Edições</span>
             <span>Subtotal</span>
           </div>
 
-          <div className="divide-y divide-[#2C241D] text-xs">
+          <div className="divide-y divide-[#38210F] text-xs">
             {items.map((it, idx) => (
               <div key={idx} className="py-2.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -136,19 +133,19 @@ export function OrderConfirmationPage({
                     src={it.image}
                     alt={it.title}
                     referrerPolicy="no-referrer"
-                    className="w-9 h-9 rounded-md object-cover bg-[#0D0B08] shrink-0"
+                    className="w-9 h-9 rounded-md object-cover bg-[#130C0A] shrink-0"
                   />
                   <div className="min-w-0">
-                    <p className="font-bold text-[#FFF8F0] truncate">{it.title}</p>
-                    <p className="text-[10px] text-[#A89A8A] font-mono">
+                    <p className="font-bold text-[#FDF2DA] truncate">{it.title}</p>
+                    <p className="text-[10px] text-[#A8907E] font-mono">
                       ID do token: #{it.tokenId?.replace('#', '') || '0042'}
                     </p>
                   </div>
                 </div>
 
-                <span className="font-mono text-[#A89A8A]">(x {it.quantity})</span>
+                <span className="font-mono text-[#A8907E]">(x {it.quantity})</span>
 
-                <span className="font-mono font-bold text-[#FFF8F0] tabular-nums">
+                <span className="font-mono font-bold text-[#FDF2DA] tabular-nums">
                   {it.totalEth} ETH
                 </span>
               </div>
@@ -156,20 +153,20 @@ export function OrderConfirmationPage({
           </div>
 
           {/* Taxa de rede & Total */}
-          <div className="pt-3 border-t border-[#2C241D] space-y-1.5 text-xs">
-            <div className="flex justify-between text-[#A89A8A]">
+          <div className="pt-3 border-t border-[#38210F] space-y-1.5 text-xs">
+            <div className="flex justify-between text-[#A8907E]">
               <span>Taxa de rede</span>
               <span className="font-mono tabular-nums">{order?.gasFeeEth || '0.016'} ETH</span>
             </div>
-            <div className="flex justify-between text-sm font-bold text-[#FFF8F0] pt-1">
+            <div className="flex justify-between text-sm font-bold text-[#FDF2DA] pt-1">
               <span>Total</span>
-              <span className="font-mono text-[#D98A48] tabular-nums">{order?.totalEth || '26.846'} ETH</span>
+              <span className="font-mono text-[#D1894B] tabular-nums">{order?.totalEth || '26.846'} ETH</span>
             </div>
           </div>
         </div>
 
         {/* Confirmation note text */}
-        <p className="text-[11px] text-[#A89A8A] leading-relaxed pt-2">
+        <p className="text-[11px] text-[#A8907E] leading-relaxed pt-2">
           Transação confirmada na Ethereum. A propriedade foi transferida para sua carteira conectada e registrada na rede.
         </p>
 
@@ -177,10 +174,9 @@ export function OrderConfirmationPage({
         <div className="pt-2">
           <button
             onClick={() => {
-              window.open(`https://etherscan.io/tx/${order?.transactionHash || '0xA91F4a82C981249817294819284102948201E82C'}`, '_blank');
               onToast({ type: 'info', title: 'Explorador', description: 'Abrindo visualização na Etherscan.' });
             }}
-            className="w-full py-3 bg-[#D98A48] hover:bg-[#E59550] text-[#0D0B08] font-bold text-xs uppercase tracking-wider rounded-md transition-colors shadow-lg shadow-[#D98A48]/20"
+            className="w-full py-3 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono text-xs uppercase tracking-wider rounded-md transition-colors shadow-lg shadow-[#D1894B]/20"
           >
             Ver no Etherscan
           </button>

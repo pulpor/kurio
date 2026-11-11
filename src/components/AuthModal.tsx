@@ -86,21 +86,21 @@ export function AuthModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 bg-[#0D0B08]/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+      className="fixed inset-0 z-50 bg-[#130C0A]/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in font-mono"
     >
-      <div className="relative w-full max-w-md bg-[#161310] border border-[#2C241D] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 text-left">
+      <div className="relative w-full max-w-md bg-[#231611] border border-[#38210F] rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6 text-left">
         
         {/* Close Button top right */}
         <button
           onClick={onClose}
           aria-label="Fechar"
-          className="absolute top-5 right-5 text-[#A89A8A] hover:text-[#FFF8F0] p-1"
+          className="absolute top-5 right-5 text-[#A8907E] hover:text-[#FDF2DA] p-1"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Tabs: Entrar | Criar conta matching Figma Pages 6 & 7 exact */}
-        <div className="flex items-center justify-center gap-4 text-base font-bold pb-2">
+        <div className="flex items-center justify-center gap-4 text-base font-bold pb-2 font-mono">
           <button
             onClick={() => {
               setTab('login');
@@ -108,13 +108,13 @@ export function AuthModal({
             }}
             className={`py-1 relative transition-colors ${
               tab === 'login'
-                ? 'text-[#FFF8F0] after:absolute after:bottom-[-8px] after:left-0 after:right-0 after:h-0.5 after:bg-[#D98A48]'
-                : 'text-[#A89A8A] hover:text-[#FFF8F0]'
+                ? 'text-[#FDF2DA] after:absolute after:bottom-[-8px] after:left-0 after:right-0 after:h-0.5 after:bg-[#D1894B]'
+                : 'text-[#A8907E] hover:text-[#FDF2DA]'
             }`}
           >
             Entrar
           </button>
-          <span className="text-[#2C241D]">|</span>
+          <span className="text-[#38210F]">|</span>
           <button
             onClick={() => {
               setTab('register');
@@ -122,8 +122,8 @@ export function AuthModal({
             }}
             className={`py-1 relative transition-colors ${
               tab === 'register'
-                ? 'text-[#FFF8F0] after:absolute after:bottom-[-8px] after:left-0 after:right-0 after:h-0.5 after:bg-[#D98A48]'
-                : 'text-[#A89A8A] hover:text-[#FFF8F0]'
+                ? 'text-[#FDF2DA] after:absolute after:bottom-[-8px] after:left-0 after:right-0 after:h-0.5 after:bg-[#D1894B]'
+                : 'text-[#A8907E] hover:text-[#FDF2DA]'
             }`}
           >
             Criar conta
@@ -131,7 +131,7 @@ export function AuthModal({
         </div>
 
         {/* Subtitle matching Figma */}
-        <p className="text-xs text-[#A89A8A] text-center leading-relaxed">
+        <p className="text-xs text-[#A8907E] text-center leading-relaxed">
           {tab === 'login'
             ? 'Entre para gerenciar sua carteira, coleção e perfil de criador.'
             : 'Crie seu perfil de colecionador e conecte uma carteira quando quiser.'}
@@ -146,7 +146,7 @@ export function AuthModal({
 
         {/* Tab 1: Entrar Form matching Figma Page 6 */}
         {tab === 'login' ? (
-          <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
+          <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs font-mono">
             <div className="space-y-1">
               <input
                 type="email"
@@ -154,7 +154,7 @@ export function AuthModal({
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
                 placeholder="contato@email.com"
-                className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3.5 py-2.5 text-xs text-[#FFF8F0] placeholder-[#6E6255] outline-none focus:border-[#D98A48]"
+                className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3.5 py-2.5 text-xs text-[#FDF2DA] placeholder-[#7A6352] outline-none focus:border-[#D1894B]"
               />
             </div>
 
@@ -165,12 +165,12 @@ export function AuthModal({
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
                 placeholder="***********"
-                className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3.5 py-2.5 text-xs text-[#FFF8F0] placeholder-[#6E6255] outline-none focus:border-[#D98A48] pr-10"
+                className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3.5 py-2.5 text-xs text-[#FDF2DA] placeholder-[#7A6352] outline-none focus:border-[#D1894B] pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6E6255] hover:text-[#FFF8F0]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A6352] hover:text-[#FDF2DA]"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -180,7 +180,7 @@ export function AuthModal({
               <button
                 type="button"
                 onClick={() => onToast({ type: 'info', title: 'Recuperação de Senha', description: 'Instruções enviadas para seu email.' })}
-                className="text-[11px] text-[#A89A8A] hover:text-[#FFF8F0]"
+                className="text-[11px] text-[#A8907E] hover:text-[#FDF2DA]"
               >
                 Esqueceu a senha?
               </button>
@@ -189,14 +189,14 @@ export function AuthModal({
             <button
               type="submit"
               disabled={isLoggingIn}
-              className="w-full py-3 bg-[#D98A48] hover:bg-[#E59550] disabled:opacity-50 text-[#0D0B08] font-bold text-xs rounded-md uppercase tracking-wider transition-colors shadow-lg shadow-[#D98A48]/20"
+              className="w-full py-3 bg-[#D1894B] hover:bg-[#E0985C] disabled:opacity-50 text-[#130C0A] font-bold font-mono text-xs rounded-md uppercase tracking-wider transition-colors shadow-lg shadow-[#D1894B]/20"
             >
               {isLoggingIn ? 'Autenticando...' : 'Entrar'}
             </button>
           </form>
         ) : (
           /* Tab 2: Criar conta Form matching Figma Page 7 */
-          <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-xs">
+          <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-xs font-mono">
             <div>
               <input
                 type="text"
@@ -204,7 +204,7 @@ export function AuthModal({
                 value={regUsername}
                 onChange={(e) => setRegUsername(e.target.value)}
                 placeholder="Nome de usuário"
-                className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3.5 py-2.5 text-xs text-[#FFF8F0] placeholder-[#6E6255] font-mono outline-none focus:border-[#D98A48]"
+                className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3.5 py-2.5 text-xs text-[#FDF2DA] placeholder-[#7A6352] font-mono outline-none focus:border-[#D1894B]"
               />
             </div>
 
@@ -215,7 +215,7 @@ export function AuthModal({
                 value={regEmail}
                 onChange={(e) => setRegEmail(e.target.value)}
                 placeholder="Digite seu e-mail"
-                className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3.5 py-2.5 text-xs text-[#FFF8F0] placeholder-[#6E6255] outline-none focus:border-[#D98A48]"
+                className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3.5 py-2.5 text-xs text-[#FDF2DA] placeholder-[#7A6352] outline-none focus:border-[#D1894B]"
               />
             </div>
 
@@ -226,7 +226,7 @@ export function AuthModal({
                 value={regPassword}
                 onChange={(e) => setRegPassword(e.target.value)}
                 placeholder="Senha"
-                className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3.5 py-2.5 text-xs text-[#FFF8F0] placeholder-[#6E6255] outline-none focus:border-[#D98A48]"
+                className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3.5 py-2.5 text-xs text-[#FDF2DA] placeholder-[#7A6352] outline-none focus:border-[#D1894B]"
               />
             </div>
 
@@ -237,14 +237,14 @@ export function AuthModal({
                 value={regConfirmPassword}
                 onChange={(e) => setRegConfirmPassword(e.target.value)}
                 placeholder="Confirmar senha"
-                className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3.5 py-2.5 text-xs text-[#FFF8F0] placeholder-[#6E6255] outline-none focus:border-[#D98A48]"
+                className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3.5 py-2.5 text-xs text-[#FDF2DA] placeholder-[#7A6352] outline-none focus:border-[#D1894B]"
               />
             </div>
 
             <button
               type="submit"
               disabled={isRegistering}
-              className="w-full py-3 bg-[#D98A48] hover:bg-[#E59550] disabled:opacity-50 text-[#0D0B08] font-bold text-xs rounded-md uppercase tracking-wider transition-colors shadow-lg shadow-[#D98A48]/20"
+              className="w-full py-3 bg-[#D1894B] hover:bg-[#E0985C] disabled:opacity-50 text-[#130C0A] font-bold font-mono text-xs rounded-md uppercase tracking-wider transition-colors shadow-lg shadow-[#D1894B]/20"
             >
               {isRegistering ? 'Criando conta...' : 'Criar conta'}
             </button>
@@ -254,30 +254,30 @@ export function AuthModal({
         {/* Divider: Ou continue com matching Figma */}
         <div className="relative text-center py-2">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#2C241D]" />
+            <div className="w-full border-t border-[#38210F]" />
           </div>
-          <span className="relative px-3 bg-[#161310] text-[11px] text-[#A89A8A]">
+          <span className="relative px-3 bg-[#231611] text-[11px] text-[#A8907E] font-mono">
             Ou continue com
           </span>
         </div>
 
         {/* Social Buttons matching Figma Pages 6 & 7 exact */}
-        <div className="space-y-2">
+        <div className="space-y-2 font-mono">
           <button
             type="button"
             onClick={() => onToast({ type: 'info', title: 'OAuth Google', description: 'Simulando login com Google.' })}
-            className="w-full py-2.5 px-4 rounded-md border border-[#2C241D] bg-[#0D0B08] hover:bg-[#1F1A15] text-xs font-semibold text-[#FFF8F0] flex items-center justify-center gap-2.5 transition-colors"
+            className="w-full py-2.5 px-4 rounded-md border border-[#38210F] bg-[#130C0A] hover:bg-[#38210F]/40 text-xs font-semibold text-[#FDF2DA] flex items-center justify-center gap-2.5 transition-colors"
           >
-            <span className="font-bold text-sm text-cyan-400">G</span>
+            <span className="font-bold text-sm text-[#D1894B]">G</span>
             Continuar com Google
           </button>
 
           <button
             type="button"
             onClick={() => onToast({ type: 'info', title: 'OAuth Facebook', description: 'Simulando login com Facebook.' })}
-            className="w-full py-2.5 px-4 rounded-md border border-[#2C241D] bg-[#0D0B08] hover:bg-[#1F1A15] text-xs font-semibold text-[#FFF8F0] flex items-center justify-center gap-2.5 transition-colors"
+            className="w-full py-2.5 px-4 rounded-md border border-[#38210F] bg-[#130C0A] hover:bg-[#38210F]/40 text-xs font-semibold text-[#FDF2DA] flex items-center justify-center gap-2.5 transition-colors"
           >
-            <span className="font-bold text-sm text-blue-500">f</span>
+            <span className="font-bold text-sm text-blue-400">f</span>
             Continuar com Facebook
           </button>
         </div>

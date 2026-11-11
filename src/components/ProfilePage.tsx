@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   User,
   Wallet,
@@ -8,7 +8,6 @@ import {
   Download,
   HelpCircle,
   LogOut,
-  Save,
   CheckCircle,
   AlertCircle,
 } from 'lucide-react';
@@ -28,7 +27,7 @@ export function ProfilePage({
   onToast,
 }: ProfilePageProps) {
   const { user, logout } = useAuth();
-  const { profile, updateProfile, isUpdating, changePassword, isChangingPassword } = useProfile();
+  const { updateProfile, isUpdating, changePassword, isChangingPassword } = useProfile();
   const { orders } = useOrders();
 
   // Active subtab in profile sidebar
@@ -94,7 +93,7 @@ export function ProfilePage({
   ];
 
   return (
-    <div className="bg-[#0D0B08] text-[#FFF8F0] py-8 lg:py-12 min-h-[85vh]">
+    <div className="bg-[#130C0A] text-[#FDF2DA] py-8 lg:py-12 min-h-[85vh] font-mono">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -102,8 +101,8 @@ export function ProfilePage({
           {/* ========================================================== */}
           {/* LEFT SIDEBAR: Meu perfil matching Figma Page 8 exact       */}
           {/* ========================================================== */}
-          <aside className="lg:col-span-3 space-y-4 bg-[#161310] border border-[#2C241D] rounded-2xl p-5 text-xs text-left">
-            <h2 className="text-sm font-bold text-[#FFF8F0] tracking-wide mb-3">
+          <aside className="lg:col-span-3 space-y-4 bg-[#231611] border border-[#38210F] rounded-2xl p-5 text-xs text-left">
+            <h2 className="text-sm font-bold font-mono text-[#FDF2DA] tracking-wide mb-3">
               Meu perfil
             </h2>
 
@@ -121,10 +120,10 @@ export function ProfilePage({
                         setActiveMenu(item.id as any);
                       }
                     }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors ${
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-colors font-mono ${
                       isActive
-                        ? 'text-[#D98A48] bg-[#D98A48]/10 font-bold'
-                        : 'text-[#A89A8A] hover:bg-[#1F1A15] hover:text-[#FFF8F0]'
+                        ? 'text-[#D1894B] bg-[#D1894B]/10 font-bold'
+                        : 'text-[#A8907E] hover:bg-[#38210F]/40 hover:text-[#FDF2DA]'
                     }`}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
@@ -133,11 +132,11 @@ export function ProfilePage({
                 );
               })}
 
-              <div className="border-t border-[#2C241D] my-2" />
+              <div className="border-t border-[#38210F] my-2" />
 
               <button
                 onClick={() => logout()}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-400 hover:bg-rose-950/20 transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-400 hover:bg-rose-950/20 transition-colors font-mono"
               >
                 <LogOut className="w-4 h-4 shrink-0" />
                 <span>Sair</span>
@@ -148,9 +147,9 @@ export function ProfilePage({
           {/* ========================================================== */}
           {/* RIGHT CONTENT: Perfil do colecionador matching Figma       */}
           {/* ========================================================== */}
-          <main className="lg:col-span-9 bg-[#161310] border border-[#2C241D] rounded-2xl p-6 sm:p-8 space-y-8 text-left">
+          <main className="lg:col-span-9 bg-[#231611] border border-[#38210F] rounded-2xl p-6 sm:p-8 space-y-8 text-left">
             
-            <h1 className="text-base font-bold text-[#FFF8F0] tracking-wide">
+            <h1 className="text-base font-bold font-mono text-[#FDF2DA] tracking-wide">
               Perfil do colecionador
             </h1>
 
@@ -168,14 +167,14 @@ export function ProfilePage({
               </div>
             )}
 
-            <form onSubmit={handleSaveProfile} className="space-y-6 text-xs">
+            <form onSubmit={handleSaveProfile} className="space-y-6 text-xs font-mono">
               
               {/* Form Grid matching Figma Page 8 exact */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 
                 {/* Nome de exibição* */}
                 <div className="space-y-1.5">
-                  <label className="text-[#A89A8A] font-medium block">
+                  <label className="text-[#A8907E] font-medium block">
                     Nome de exibição*
                   </label>
                   <input
@@ -183,13 +182,13 @@ export function ProfilePage({
                     required
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2.5 text-xs text-[#FFF8F0] outline-none focus:border-[#D98A48]"
+                    className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
                   />
                 </div>
 
                 {/* Nome de usuário* */}
                 <div className="space-y-1.5">
-                  <label className="text-[#A89A8A] font-medium block">
+                  <label className="text-[#A8907E] font-medium block">
                     Nome de usuário*
                   </label>
                   <input
@@ -197,13 +196,13 @@ export function ProfilePage({
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2.5 text-xs text-[#FFF8F0] font-mono outline-none focus:border-[#D98A48]"
+                    className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] font-mono outline-none focus:border-[#D1894B]"
                   />
                 </div>
 
                 {/* E-mail* */}
                 <div className="space-y-1.5">
-                  <label className="text-[#A89A8A] font-medium block">
+                  <label className="text-[#A8907E] font-medium block">
                     E-mail*
                   </label>
                   <input
@@ -211,13 +210,13 @@ export function ProfilePage({
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2.5 text-xs text-[#FFF8F0] outline-none focus:border-[#D98A48]"
+                    className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
                   />
                 </div>
 
                 {/* Nome ENS * */}
                 <div className="space-y-1.5">
-                  <label className="text-[#A89A8A] font-medium block">
+                  <label className="text-[#A8907E] font-medium block">
                     Nome ENS *
                   </label>
                   <div className="flex">
@@ -225,9 +224,9 @@ export function ProfilePage({
                       type="text"
                       value={ensName.replace('.eth', '')}
                       onChange={(e) => setEnsName(e.target.value + '.eth')}
-                      className="flex-1 bg-[#0D0B08] border border-r-0 border-[#2C241D] rounded-l-md px-3 py-2.5 text-xs text-[#FFF8F0] font-mono outline-none focus:border-[#D98A48]"
+                      className="flex-1 bg-[#130C0A] border border-r-0 border-[#38210F] rounded-l-md px-3 py-2.5 text-xs text-[#FDF2DA] font-mono outline-none focus:border-[#D1894B]"
                     />
-                    <span className="bg-[#1F1A15] border border-[#2C241D] rounded-r-md px-3 py-2.5 text-xs text-[#A89A8A] font-mono">
+                    <span className="bg-[#38210F]/50 border border-[#38210F] rounded-r-md px-3 py-2.5 text-xs text-[#A8907E] font-mono">
                       .eth
                     </span>
                   </div>
@@ -235,20 +234,20 @@ export function ProfilePage({
 
                 {/* Apelido da carteira* */}
                 <div className="space-y-1.5">
-                  <label className="text-[#A89A8A] font-medium block">
+                  <label className="text-[#A8907E] font-medium block">
                     Apelido da carteira*
                   </label>
                   <input
                     type="text"
                     value={walletNickname}
                     onChange={(e) => setWalletNickname(e.target.value)}
-                    className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2.5 text-xs text-[#FFF8F0] outline-none focus:border-[#D98A48]"
+                    className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2.5 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
                   />
                 </div>
 
                 {/* Avatar matching Figma: circle + Alterar & Remover */}
                 <div className="space-y-1.5">
-                  <label className="text-[#A89A8A] font-medium block">
+                  <label className="text-[#A8907E] font-medium block">
                     Avatar
                   </label>
                   <div className="flex items-center gap-3">
@@ -256,19 +255,19 @@ export function ProfilePage({
                       src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=160&q=80'}
                       alt="Avatar"
                       referrerPolicy="no-referrer"
-                      className="w-10 h-10 rounded-full object-cover border border-[#D98A48]"
+                      className="w-10 h-10 rounded-full object-cover border border-[#D1894B]"
                     />
                     <button
                       type="button"
                       onClick={() => onToast({ type: 'info', title: 'Avatar', description: 'Seletor de foto aberto.' })}
-                      className="px-3.5 py-1.5 bg-[#D98A48] hover:bg-[#E59550] text-[#0D0B08] font-bold text-xs rounded-md"
+                      className="px-3.5 py-1.5 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono text-xs rounded-md"
                     >
                       Alterar
                     </button>
                     <button
                       type="button"
                       onClick={() => onToast({ type: 'info', title: 'Avatar', description: 'Avatar restaurado para o padrão.' })}
-                      className="px-3.5 py-1.5 border border-[#2C241D] hover:bg-[#1F1A15] text-[#A89A8A] text-xs rounded-md"
+                      className="px-3.5 py-1.5 border border-[#38210F] hover:bg-[#38210F]/40 text-[#A8907E] font-mono text-xs rounded-md"
                     >
                       Remover
                     </button>
@@ -278,42 +277,42 @@ export function ProfilePage({
               </div>
 
               {/* Section: Alterar senha matching Figma Page 8 exact */}
-              <div className="pt-6 border-t border-[#2C241D] space-y-4">
-                <h2 className="text-xs font-bold text-[#FFF8F0] uppercase tracking-wider">
+              <div className="pt-6 border-t border-[#38210F] space-y-4">
+                <h2 className="text-xs font-bold font-mono text-[#FDF2DA] uppercase tracking-wider">
                   Alterar senha
                 </h2>
 
                 <div className="space-y-3 max-w-md">
                   <div className="space-y-1">
-                    <label className="text-[#A89A8A] font-medium block">Senha atual</label>
+                    <label className="text-[#A8907E] font-medium block">Senha atual</label>
                     <input
                       type="password"
                       placeholder="••••••••"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2 text-xs text-[#FFF8F0] outline-none focus:border-[#D98A48]"
+                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[#A89A8A] font-medium block">Nova senha</label>
+                    <label className="text-[#A8907E] font-medium block">Nova senha</label>
                     <input
                       type="password"
                       placeholder="••••••••"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2 text-xs text-[#FFF8F0] outline-none focus:border-[#D98A48]"
+                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[#A89A8A] font-medium block">Confirmar nova senha</label>
+                    <label className="text-[#A8907E] font-medium block">Confirmar nova senha</label>
                     <input
                       type="password"
                       placeholder="••••••••"
                       value={confirmNewPassword}
                       onChange={(e) => setConfirmNewPassword(e.target.value)}
-                      className="w-full bg-[#0D0B08] border border-[#2C241D] rounded-md px-3 py-2 text-xs text-[#FFF8F0] outline-none focus:border-[#D98A48]"
+                      className="w-full bg-[#130C0A] border border-[#38210F] rounded-md px-3 py-2 text-xs text-[#FDF2DA] outline-none focus:border-[#D1894B]"
                     />
                   </div>
                 </div>
@@ -324,7 +323,7 @@ export function ProfilePage({
                 <button
                   type="submit"
                   disabled={isUpdating || isChangingPassword}
-                  className="px-8 py-2.5 bg-[#D98A48] hover:bg-[#E59550] text-[#0D0B08] font-bold text-xs uppercase tracking-wider rounded-md transition-colors shadow-lg shadow-[#D98A48]/20"
+                  className="px-8 py-2.5 bg-[#D1894B] hover:bg-[#E0985C] text-[#130C0A] font-bold font-mono text-xs uppercase tracking-wider rounded-md transition-colors shadow-lg shadow-[#D1894B]/20"
                 >
                   {isUpdating ? 'Salvando...' : 'Salvar'}
                 </button>
@@ -334,8 +333,8 @@ export function ProfilePage({
 
             {/* Past orders list */}
             {orders.length > 0 && (
-              <div className="pt-8 border-t border-[#2C241D] space-y-4">
-                <h3 className="text-xs font-bold text-[#FFF8F0] uppercase tracking-wider">
+              <div className="pt-8 border-t border-[#38210F] space-y-4">
+                <h3 className="text-xs font-bold font-mono text-[#FDF2DA] uppercase tracking-wider">
                   Histórico de Compras Confirmadas
                 </h3>
                 <div className="space-y-2">
@@ -343,11 +342,11 @@ export function ProfilePage({
                     <div
                       key={ord.id}
                       onClick={() => onGoToOrderReceipt(ord.id)}
-                      className="p-3 rounded-lg bg-[#0D0B08] border border-[#2C241D] hover:border-[#D98A48] cursor-pointer flex items-center justify-between text-xs"
+                      className="p-3 rounded-lg bg-[#130C0A] border border-[#38210F] hover:border-[#D1894B] cursor-pointer flex items-center justify-between text-xs font-mono"
                     >
-                      <span className="font-mono text-[#D98A48] font-bold">#{ord.id}</span>
-                      <span className="text-[#A89A8A]">{ord.items.length} obra(s)</span>
-                      <span className="font-mono font-bold text-[#FFF8F0]">{ord.totalEth} ETH</span>
+                      <span className="font-mono text-[#D1894B] font-bold">#{ord.id}</span>
+                      <span className="text-[#A8907E]">{(ord.items || []).length} obra(s)</span>
+                      <span className="font-mono font-bold text-[#FDF2DA]">{ord.totalEth} ETH</span>
                     </div>
                   ))}
                 </div>

@@ -36,6 +36,15 @@ export function useNFTs(params: NFTQueryParams = {}) {
       if (params.limit) searchParams.set('limit', params.limit.toString());
 
       const { data } = await api.get(`/api/nfts?${searchParams.toString()}`);
+      if (!data || typeof data !== 'object' || !Array.isArray(data.items)) {
+        return {
+          items: [],
+          total: 0,
+          page: params.page || 1,
+          totalPages: 1,
+          limit: params.limit || 6,
+        };
+      }
       return data;
     },
     staleTime: 1000 * 30, // 30s
